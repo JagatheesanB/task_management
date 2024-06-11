@@ -7,6 +7,8 @@ import 'package:task_management/tasks/presentation/views/login_page.dart';
 import 'package:task_management/tasks/utils/notifications.dart';
 // import 'package:workmanager/workmanager.dart';
 import 'tasks/presentation/providers/language_provider.dart';
+// import 'tasks/presentation/views/bio_metric.dart';
+// import 'tasks/presentation/views/bio_metric.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +36,7 @@ class MyApp extends ConsumerWidget {
       title: 'TIMESHEET',
       theme: ThemeData(),
       home: const LoginScreen(),
+      // home: const BioMetric(),
     );
   }
 }

@@ -51,7 +51,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       return 'Email is required';
     } else if (!emailRegex.hasMatch(value)) {
       return 'Enter a valid email address with @gmail.com or @kumaran.com';
-    } else if (value.length > 25) {
+    } else if (value.length > 60) {
       return 'Email must not exceed 30 characters';
     }
     return null;

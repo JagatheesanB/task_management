@@ -16,7 +16,8 @@ class TaskRepositoryImplementation implements TaskRepository {
   }
 
   @override
-  Future<void> signup(String userName, String userPassword) async {
+  Future<void> signup(
+      String userName, String userPassword) async {
     await _databaseHelper.signup(userName, userPassword);
   }
 

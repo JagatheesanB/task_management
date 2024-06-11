@@ -98,15 +98,36 @@ class DatabaseHelper {
     return result.isNotEmpty;
   }
 
-  Future<void> signup(String userName, String userPassword) async {
+  Future<void> signup(
+      String userName, String userPassword) async {
     final Database db = await database;
 
     await db.insert(
       'users',
-      {'userName': userName, 'userPassword': userPassword},
+      {
+        'userName': userName,
+        'userPassword': userPassword,
+      },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+
+  // Future<String?> getUserEmailByBiometricId(String biometricId) async {
+  //   final Database db = await database;
+
+  //   final List<Map<String, dynamic>> result = await db.query(
+  //     'users',
+  //     columns: ['userName'],
+  //     where: 'biometricId = ?',
+  //     whereArgs: [biometricId],
+  //   );
+
+  //   if (result.isNotEmpty) {
+  //     return result.first['userName'] as String?;
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
   Future<bool> checkUserExists(String userName) async {
     final Database db = await database;
@@ -241,7 +262,7 @@ class DatabaseHelper {
       where: 'userId = ?',
       whereArgs: [userId],
     );
-    print('All tasks maps - $allTasksMaps');
+    // print('All tasks maps - $allTasksMaps');
 
     return List.generate(allTasksMaps.length, (i) {
       return Tasks(
@@ -671,7 +692,7 @@ class DatabaseHelper {
       where: 'taskId = ?',
       whereArgs: [taskId],
     );
-    print('Notes Maps - $maps');
+    // print('Notes Maps - $maps');
     return List.generate(maps.length, (i) {
       return Comment(
         id: maps[i]['id'],

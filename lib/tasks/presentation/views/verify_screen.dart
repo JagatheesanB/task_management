@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:flutter/services.dart';
 import 'package:animated_snack_bar/animated_snack_bar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_management/tasks/data/dataSources/task_datasource.dart';
+import 'package:task_management/tasks/presentation/providers/auth_provider.dart';
 
 import 'dart:async';
 
 import 'package:task_management/tasks/presentation/views/login_page.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class OtpScreen extends StatefulWidget {
+class OtpScreen extends ConsumerStatefulWidget {
   final String email;
   final String password;
   final EmailOTP myauth;
@@ -26,10 +28,10 @@ class OtpScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _OtpScreenState createState() => _OtpScreenState();
+  ConsumerState createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpScreenState extends ConsumerState<OtpScreen> {
   final TextEditingController otpController1 = TextEditingController();
   final TextEditingController otpController2 = TextEditingController();
   final TextEditingController otpController3 = TextEditingController();
@@ -147,7 +149,10 @@ class _OtpScreenState extends State<OtpScreen> {
                       if (await widget.myauth.verifyOTP(otp: otp)) {
                         final encryptedPassword =
                             widget.encryptPassword(widget.password);
-                        await widget.db.signup(widget.email, encryptedPassword);
+                        // await widget.db.signup(widget.email, encryptedPassword);
+                        await ref
+                            .read(authNotifierProvider.notifier)
+                            .signup(widget.email, encryptedPassword);
                         if (context.mounted) {
                           Navigator.popUntil(context, ModalRoute.withName('/'));
                           Navigator.push(
