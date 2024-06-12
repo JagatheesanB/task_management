@@ -369,9 +369,31 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            _getFormattedDate(),
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              gradient: const LinearGradient(
+                colors: [Colors.purple, Color.fromARGB(255, 99, 68, 182)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Row(
+              children: [
+                GestureDetector(
+                  child: Text(
+                    _getFormattedDate(),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontFamily: 'Poppins',
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

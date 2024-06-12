@@ -433,6 +433,8 @@ class DayPageState extends ConsumerState<DayPage>
     );
   }
 
+  
+
   Widget _buildNoTasksWidget() {
     return const Center(
       child: Text(

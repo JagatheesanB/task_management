@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -30,6 +31,9 @@ class WeekPageState extends ConsumerState<WeekPage>
   String selectedInterval = 'DAY';
   late List<Tasks> taskList;
 
+  DateTimeRange dateRange =
+      DateTimeRange(start: DateTime(2024, 5, 1), end: DateTime.now());
+
   void _setSelectedInterval(String interval) {
     setState(() {
       selectedInterval = interval;
@@ -43,29 +47,105 @@ class WeekPageState extends ConsumerState<WeekPage>
     _selectedDate = widget.selectedDate;
   }
 
-  List<DateTime> _generateWeeks(DateTime startDate) {
-    final List<DateTime> weeks = [];
-    DateTime currentDate =
-        startDate.subtract(Duration(days: startDate.weekday - 1));
-    for (int i = 0; i < 7; i++) {
-      weeks.add(currentDate.add(Duration(days: i)));
-    }
-    return weeks;
-  }
-
   @override
   Widget build(BuildContext context) {
+    final start = dateRange.start;
+    final end = dateRange.end;
+    // final difference = dateRange.duration;
+
     taskList = ref.watch(taskProvider);
     final selectedDateTasks = taskList.where((task) =>
         // task.interval == "WEEK" &&
         _isSameDay(task.dateTime!, _selectedDate)).toList();
 
-    final List<DateTime> weekDates = _generateWeeks(_selectedDate);
-
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  gradient: const LinearGradient(
+                    colors: [Colors.purple, Color.fromARGB(255, 99, 68, 182)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  // boxShadow: [
+                  //   BoxShadow(
+                  //     color: Colors.blue.withOpacity(0.4),
+                  //     spreadRadius: 2,
+                  //     blurRadius: 8,
+                  //     offset: const Offset(0, 3),
+                  //   ),
+                  // ],
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: _previousWeek,
+                      icon: const Icon(Icons.arrow_circle_left_outlined,
+                          color: Colors.white),
+                    ),
+                    GestureDetector(
+                      onTap: pickDateRange,
+                      child: Text(
+                        '${start.day}/${start.month}/${start.year}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontFamily: 'poppins',
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          // decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        '-',
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: pickDateRange,
+                      child: Text(
+                        '${end.day}/${end.month}/${end.year}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontFamily: 'poppins',
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          // decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _nextWeek,
+                      icon: const Icon(Icons.arrow_circle_right_outlined,
+                          color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          // Text(
+          //   'Difference : ${difference.inDays} days',
+          //   style: const TextStyle(fontFamily: 'poppins', fontSize: 8),
+          // ),
+          // _week(),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -104,23 +184,14 @@ class WeekPageState extends ConsumerState<WeekPage>
                                 : null,
                             color: !isSelectedDate ? Colors.white : null,
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: isSelectedDate
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.purple.withOpacity(0.5),
-                                      spreadRadius: 2,
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    )
-                                  ]
-                                : [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.3),
-                                      spreadRadius: 2,
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    )
-                                  ],
+                            // boxShadow: [
+                            //   BoxShadow(
+                            //     color: Colors.purple.withOpacity(0.5),
+                            //     spreadRadius: 2,
+                            //     blurRadius: 8,
+                            //     offset: const Offset(0, 3),
+                            //   )
+                            // ],
                             border: Border.all(
                               color: !isSelectedDate
                                   ? isPastDate
@@ -205,6 +276,58 @@ class WeekPageState extends ConsumerState<WeekPage>
     );
   }
 
+  Future pickDateRange() async {
+    DateTimeRange? nextDateRange = await showDateRangePicker(
+        context: context,
+        initialDateRange: dateRange,
+        firstDate: DateTime(2022),
+        lastDate: DateTime(2025));
+
+    if (nextDateRange == null) return;
+    setState(() {
+      dateRange = nextDateRange;
+    });
+  }
+
+  // Widget _week() {
+  //   final previousMonth = DateTime(_selectedDate.year, _selectedDate.month - 1);
+  //   final nextMonth = DateTime(_selectedDate.year, _selectedDate.month + 1);
+  //   return Visibility(
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.center,
+  //       children: [
+  //         IconButton(
+  //           onPressed: _selectedDate.month > DateTime.now().month
+  //               ? () {
+  //                   setState(() {
+  //                     _selectedDate = previousMonth;
+  //                   });
+  //                 }
+  //               : null,
+  //           icon: const Icon(
+  //             Icons.arrow_back_ios,
+  //             color: Colors.redAccent,
+  //           ),
+  //         ),
+  //         Text(
+  //           _getFormattedDate(),
+  //           style: const TextStyle(fontSize: 25, fontWeight: FontWeight.w600),
+  //         ),
+  //         IconButton(
+  //           onPressed: _selectedDate.month < DateTime.now().month
+  //               ? () {
+  //                   setState(() {
+  //                     _selectedDate = nextMonth;
+  //                   });
+  //                 }
+  //               : null,
+  //           icon: const Icon(Icons.arrow_forward_ios, color: Colors.redAccent),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   FloatingActionButton _addButton(BuildContext context) {
     return FloatingActionButton(
       heroTag: 'btn2',
@@ -229,6 +352,26 @@ class WeekPageState extends ConsumerState<WeekPage>
         size: 30,
       ),
     );
+  }
+
+  void _previousWeek() {
+    setState(() {
+      dateRange = DateTimeRange(
+        start: dateRange.start.subtract(const Duration(days: 7)),
+        end: dateRange.end.subtract(const Duration(days: 7)),
+      );
+      _selectedDate = dateRange.start;
+    });
+  }
+
+  void _nextWeek() {
+    setState(() {
+      dateRange = DateTimeRange(
+        start: dateRange.start.add(const Duration(days: 7)),
+        end: dateRange.end.add(const Duration(days: 7)),
+      );
+      _selectedDate = dateRange.start;
+    });
   }
 
   bool _hasTasksForDate(DateTime date, List<Tasks> taskList) {
@@ -264,5 +407,9 @@ class WeekPageState extends ConsumerState<WeekPage>
             color: Colors.black),
       ),
     );
+  }
+
+  String _getFormattedDate() {
+    return DateFormat('dd MMMM yyyy').format(_selectedDate);
   }
 }
