@@ -362,9 +362,9 @@ class _ExcelGeneratorState extends ConsumerState<ExcelGenerator> {
     if (totalMinutes >= 60) {
       int hours = totalMinutes ~/ 60;
       int minutes = totalMinutes % 60;
-      return '$hours h $minutes m';
+      return '$hours H $minutes M';
     } else {
-      return '$totalMinutes m';
+      return '$totalMinutes M';
     }
   }
 

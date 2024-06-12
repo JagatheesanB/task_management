@@ -43,6 +43,7 @@ class AttendanceHistoryScreen extends ConsumerWidget {
             ),
             trailing: const Icon(Icons.date_range),
             onTap: () async {
+              // picking date and state update
               final pickedDate = await showDatePicker(
                 context: context,
                 initialDate: DateTime.now(),
@@ -58,6 +59,7 @@ class AttendanceHistoryScreen extends ConsumerWidget {
             },
           ),
           Consumer(
+            // displayin the selected date
             builder: (context, ref, _) {
               final selectedDate = ref.watch(dateRangeProvider)?.start;
               if (selectedDate != null) {
@@ -78,7 +80,8 @@ class AttendanceHistoryScreen extends ConsumerWidget {
             },
           ),
           Expanded(
-            child: Consumer(
+            // Filtering Attendance Records by Selected Date
+            child:Consumer(
               builder: (context, ref, _) {
                 final selectedDate =
                     ref.watch(dateRangeProvider)?.start ?? DateTime.now();

@@ -43,12 +43,24 @@ class WeekPageState extends ConsumerState<WeekPage>
     _selectedDate = widget.selectedDate;
   }
 
+  List<DateTime> _generateWeeks(DateTime startDate) {
+    final List<DateTime> weeks = [];
+    DateTime currentDate =
+        startDate.subtract(Duration(days: startDate.weekday - 1));
+    for (int i = 0; i < 7; i++) {
+      weeks.add(currentDate.add(Duration(days: i)));
+    }
+    return weeks;
+  }
+
   @override
   Widget build(BuildContext context) {
     taskList = ref.watch(taskProvider);
     final selectedDateTasks = taskList.where((task) =>
         // task.interval == "WEEK" &&
         _isSameDay(task.dateTime!, _selectedDate)).toList();
+
+    final List<DateTime> weekDates = _generateWeeks(_selectedDate);
 
     return Scaffold(
       body: Column(
@@ -62,7 +74,7 @@ class WeekPageState extends ConsumerState<WeekPage>
                 30,
                 (index) {
                   final day = _selectedDate
-                      .subtract(Duration(days: _selectedDate.weekday - 1))
+                      .subtract(Duration(days: _selectedDate.weekday - 1)) //
                       .add(Duration(days: index));
                   final isSelectedDate = _isSameDay(day, _selectedDate);
                   final hasTasks = _hasTasksForDate(day, taskList);
@@ -210,10 +222,10 @@ class WeekPageState extends ConsumerState<WeekPage>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.0),
       ),
-      backgroundColor: Colors.yellow,
+      backgroundColor: Colors.blue,
       child: const Icon(
         Icons.add,
-        color: Colors.black,
+        color: Colors.white,
         size: 30,
       ),
     );

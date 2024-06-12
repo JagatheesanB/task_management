@@ -282,14 +282,16 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                         ),
                       ),
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CommentsDialog(
-                              task: widget.task,
+                        if (!widget.task.isCompleted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CommentsDialog(
+                                task: widget.task,
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        }
                       }),
                 ],
                 child: const Icon(Icons.more_vert_rounded),

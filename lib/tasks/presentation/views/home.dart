@@ -347,6 +347,11 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
   }
 
   Widget _buildTabBar() {
+    _tabController.addListener(() {
+      setState(() {
+        selectedInterval = _tabController.index == 0 ? 'DAY' : 'WEEK';
+      });
+    });
     return TabBar(
       labelColor: Colors.purple,
       controller: _tabController,
@@ -360,7 +365,7 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
 
   Widget _week() {
     return Visibility(
-      visible: true,
+      visible: selectedInterval == 'DAY',
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

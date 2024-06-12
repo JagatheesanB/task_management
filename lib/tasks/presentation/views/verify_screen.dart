@@ -4,12 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_management/tasks/data/dataSources/task_datasource.dart';
-import 'package:task_management/tasks/presentation/providers/auth_provider.dart';
+import 'package:task_management/tasks/presentation/views/login_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import 'dart:async';
 
-import 'package:task_management/tasks/presentation/views/login_page.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../providers/auth_provider.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String email;
@@ -38,7 +38,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   final TextEditingController otpController4 = TextEditingController();
 
   Timer? _timer;
-  int _start = 60; // 30 seconds
+  int _start = 60; // 1 minutes in seconds
   bool _isOtpExpired = false;
   final bool _isOtpVerified = false;
 
@@ -80,7 +80,16 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     // final minutes = (_start ~/ 60).toString().padLeft(2, '0');
     final seconds = (_start % 60).toString().padLeft(2, '0');
     return seconds;
-    // $minutes:
+  }
+
+  void sendOtp() async {
+    await widget.myauth.sendOTP();
+    if (context.mounted) {
+      AnimatedSnackBar.material(
+        'OTP has been sent',
+        type: AnimatedSnackBarType.info,
+      ).show(context);
+    }
   }
 
   void resendOtp() async {
@@ -91,7 +100,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     startTimer();
     if (context.mounted) {
       AnimatedSnackBar.material(
-        AppLocalizations.of(context)!.otpHasBeenResent,
+        'OTP has been resent',
         type: AnimatedSnackBarType.info,
       ).show(context);
     }
@@ -101,9 +110,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.verifyOTP,
-          style: const TextStyle(
+        title: const Text(
+          "Verify OTP",
+          style: TextStyle(
             color: Colors.black,
             fontSize: 20,
             fontFamily: 'Poppins',
@@ -117,9 +126,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              Text(
-                AppLocalizations.of(context)!.enterTheOTPSentToYourEmail,
-                style: const TextStyle(
+              const Text(
+                "Enter the OTP sent to your email",
+                style: TextStyle(
                   fontSize: 18,
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w400,
@@ -203,9 +212,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 ),
               ],
               if (_isOtpExpired)
-                Text(
-                  AppLocalizations.of(context)!.otpHasExpired,
-                  style: const TextStyle(
+                const Text(
+                  "OTP has expired. Please resend OTP.",
+                  style: TextStyle(
                     color: Colors.red,
                     fontSize: 16,
                     fontFamily: 'Poppins',
@@ -217,9 +226,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               if (!_isOtpVerified)
                 TextButton(
                   onPressed: _isOtpExpired ? resendOtp : null,
-                  child: Text(
-                    AppLocalizations.of(context)!.resendOTP,
-                    style: const TextStyle(
+                  child: const Text(
+                    "Resend OTP",
+                    style: TextStyle(
                       color: Colors.blue,
                       fontSize: 16,
                       fontFamily: 'Poppins',

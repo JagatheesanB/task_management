@@ -20,10 +20,11 @@ class DatabaseHelper {
   final String completedTasksTable =
       "CREATE TABLE completed_tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, taskName TEXT,userId INTEGER, seconds INTEGER, dateTime TEXT)";
 
-  static Database? _database;
-  static DatabaseHelper? _instance;
+  static Database? _database; // holds the reference to the database
+  static DatabaseHelper?
+      _instance; //  holds the reference to the DatabaseHelper instance
 
-  DatabaseHelper._(); //private so that it cannot be accessed from outside the class.
+  DatabaseHelper._(); //private and instance can create only wihtin the class so that it cannot be accessed from outside the class.
 
   factory DatabaseHelper() {
     _instance ??= DatabaseHelper._();
@@ -98,8 +99,7 @@ class DatabaseHelper {
     return result.isNotEmpty;
   }
 
-  Future<void> signup(
-      String userName, String userPassword) async {
+  Future<void> signup(String userName, String userPassword) async {
     final Database db = await database;
 
     await db.insert(

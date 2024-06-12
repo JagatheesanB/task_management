@@ -22,7 +22,6 @@ class TaskNotifier extends StateNotifier<List<Tasks>> {
   Future<void> getAllTasks() async {
     List<Tasks> tasks = await _taskRepository.getAllTasks();
     state = tasks;
-    // onTaskListChange?.call(state);
   }
 
   Future<void> addTask(Tasks task, int userId) async {
