@@ -31,7 +31,7 @@ class _AddTaskState extends ConsumerState<AddTask>
   late DateTime _selectedDate = DateTime.now();
 
   String get _formattedSelectedDateAndMonth {
-    return 'Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}';
+    return '${AppLocalizations.of(context)!.date} ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}';
   }
 
   @override

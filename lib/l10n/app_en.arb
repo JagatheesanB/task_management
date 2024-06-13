@@ -98,5 +98,17 @@
   "tasksAddedSuccessfully": "Task(s) Added Successfully",
   "taskAlreadyExistsForThisDate": "Task already exists for this date",
   "done": "Done",
-  "enterNumberOfDays": "Enter Number of Days"
+  "enterNumberOfDays": "Enter Number of Days",
+  "workingHours": "Working Hours",
+  "notAvailable": "Not Available",
+  "selectedDate": "Selected Date",
+  "history": "History",
+  "noTaskAvailable": "No Task Available",
+  "youHaveToWorkAtLeastFifteenMinutes": "You have to work at least 15 Minutes",
+  "reopened": "Reopened",
+  "completed": "Completed",
+  "total": "Total",
+  "hoursPerDay": "hrs/Day",
+  "timeRemaining": "Time remaining",
+  "select": "Select"
 }

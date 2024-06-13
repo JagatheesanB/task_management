@@ -15,6 +15,7 @@ import 'package:task_management/tasks/utils/constants/color_generator.dart';
 
 import '../../utils/notifications.dart';
 import '../providers/auth_provider.dart';
+import '../providers/language_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -29,6 +30,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isObscured = true;
 
   final DatabaseHelper db = DatabaseHelper();
+
+  late Locale _locale;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _loadLocale();
+    super.didChangeDependencies();
+  }
+
+  void _loadLocale() {
+    _locale = ref.watch(selectedLocaleProvider);
+  }
 
   String encryptPassword(String password) {
     final bytes = utf8.encode(password);
@@ -105,6 +123,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      // appBar: AppBar(
+      //   automaticallyImplyLeading: false,
+      //   backgroundColor: Colors.white,
+      //   actions: [
+      //     _languageselector(),
+      //   ],
+      // ),
       // backgroundColor: Colors.amber.shade100,
       backgroundColor: Colors.white,
       body: Column(
@@ -127,14 +152,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               textDirection: TextDirection.ltr,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  AppLocalizations.of(context)!.login,
-                  style: const TextStyle(
-                    color: Colors.purple,
-                    fontSize: 35,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.login,
+                      style: const TextStyle(
+                        color: Colors.purple,
+                        fontSize: 35,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    Tooltip(
+                      message: 'Language',
+                      child: PopupMenuButton<Locale>(
+                        icon: const Icon(Icons.language),
+                        itemBuilder: (BuildContext context) {
+                          return languages;
+                        },
+                        onSelected: (value) {
+                          setState(() {
+                            _locale = value;
+                          });
+                          ref
+                              .read(selectedLocaleProvider.notifier)
+                              .changeLocale(value);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(
                   height: 40,
@@ -305,6 +352,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ],
       ),
     );
+  }
+
+  List<PopupMenuEntry<Locale>> get languages {
+    return [
+      const PopupMenuItem(
+        value: Locale('en'),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.language, color: Colors.blue),
+            SizedBox(width: 10),
+            Text('English'),
+          ],
+        ),
+      ),
+      const PopupMenuItem(
+        value: Locale('hi'),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.language, color: Colors.orange),
+            SizedBox(width: 10),
+            Text('Hindi'),
+          ],
+        ),
+      ),
+      const PopupMenuItem(
+        value: Locale('fr'),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.language, color: Colors.red),
+            SizedBox(width: 10),
+            Text('French'),
+          ],
+        ),
+      ),
+      const PopupMenuItem(
+        value: Locale('zh'),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.language, color: Colors.green),
+            SizedBox(width: 10),
+            Text('Chinese'),
+          ],
+        ),
+      ),
+    ];
   }
 }
 

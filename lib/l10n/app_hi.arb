@@ -98,5 +98,17 @@
   "tasksAddedSuccessfully": "कार्य सफलतापूर्वक जोड़ा गया",
   "taskAlreadyExistsForThisDate": "इस तारीख के लिए कार्य पहले से मौजूद है",
   "done": "पूर्ण",
-  "enterNumberOfDays": "दिनों की संख्या दर्ज करें"
+  "enterNumberOfDays": "दिनों की संख्या दर्ज करें",
+  "workingHours": "कार्य समय",
+  "notAvailable": "उपलब्ध नहीं",
+  "selectedDate": "चयनित तिथि",
+  "history": "इतिहास",
+  "noTaskAvailable": "कोई कार्य उपलब्ध नहीं",
+  "youHaveToWorkAtLeastFifteenMinutes": "आपको कम से कम 15 मिनट काम करना होगा",
+  "reopened": "पुनः खोला गया",
+  "completed": "पूरा हुआ",
+  "total": "कुल",
+  "hoursPerDay": "घंटे/दिन",
+  "timeRemaining": "समय शेष",
+  "select": "चयन करें"
 }

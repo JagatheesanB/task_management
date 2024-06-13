@@ -8,6 +8,7 @@ import 'package:task_management/tasks/presentation/providers/task_provider.dart'
 import '../../domain/models/completed.dart';
 import '../providers/auth_provider.dart';
 import '../views/note_page.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TaskTile extends ConsumerStatefulWidget {
   final Tasks task;
@@ -70,7 +71,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
         widget.task, int.parse(durationValue), userId!, DateTime.now());
 
     Fluttertoast.showToast(
-      msg: '${widget.task.taskName} Completed',
+      msg: '${widget.task.taskName} ${AppLocalizations.of(context)!.completed}',
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.CENTER,
       timeInSecForIosWeb: 1,
@@ -87,7 +88,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
 
   void _uncompleteTask() {
     Fluttertoast.showToast(
-      msg: '${widget.task.taskName} Reopened',
+      msg: '${widget.task.taskName} ${AppLocalizations.of(context)!.reopened}',
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.CENTER,
       timeInSecForIosWeb: 1,
@@ -272,9 +273,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                 itemBuilder: (context) => [
                   PopupMenuItem(
                       // padding: const EdgeInsets.symmetric(horizontal: 5,vertical: 5),
-                      child: const Text(
-                        'Note',
-                        style: TextStyle(
+                      child: Text(
+                        AppLocalizations.of(context)!.note,
+                        style: const TextStyle(
                           color: Colors.black,
                           fontSize: 18,
                           fontFamily: 'Poppins',
@@ -318,9 +319,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
-              title: const Text(
-                'Edit Task',
-                style: TextStyle(
+              title: Text(
+                AppLocalizations.of(context)!.editTask,
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
@@ -337,8 +338,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                       controller: TextEditingController()
                         ..text = widget.task.taskName,
                       decoration: InputDecoration(
-                        labelText: "Task Name",
-                        hintText: "Enter new task name",
+                        labelText: AppLocalizations.of(context)!.taskname,
+                        hintText:
+                            AppLocalizations.of(context)!.enterNewTaskName,
                         prefixIcon: const Icon(Icons.task),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10.0),
@@ -360,8 +362,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
                             decoration: InputDecoration(
-                              labelText: "Duration",
-                              hintText: "Enter duration",
+                              labelText: AppLocalizations.of(context)!.duration,
+                              hintText:
+                                  AppLocalizations.of(context)!.enterDuration,
                               prefixIcon: const Icon(Icons.timer),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
@@ -380,22 +383,25 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                                 durationUnit = newValue!;
                               });
                             },
-                            items: const [
+                            items: [
                               DropdownMenuItem<String>(
                                 value: null,
-                                child: Text('  Select'),
+                                child:
+                                    Text(AppLocalizations.of(context)!.select),
                               ),
                               DropdownMenuItem<String>(
                                 value: 'minutes',
-                                child: Text(' Minutes'),
+                                child:
+                                    Text(AppLocalizations.of(context)!.minutes),
                               ),
                               DropdownMenuItem<String>(
                                 value: 'hours',
-                                child: Text(' Hours'),
+                                child:
+                                    Text(AppLocalizations.of(context)!.hours),
                               ),
                             ],
                             decoration: InputDecoration(
-                              labelText: "Unit",
+                              labelText: AppLocalizations.of(context)!.unit,
                               // prefixIcon: const Icon(Icons.access_time),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(10.0),
@@ -415,9 +421,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  child: Text(
+                    AppLocalizations.of(context)!.cancel,
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
                   ),
                 ),
                 ElevatedButton(
@@ -442,7 +448,8 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                     } else if (durationUnit == 'minutes') {
                       if (enteredValue < 0.5 || enteredValue > 1440) {
                         Fluttertoast.showToast(
-                          msg: 'Please enter valid minutes (0.5-1440)',
+                          msg: AppLocalizations.of(context)!
+                              .pleaseEnterValidMinutes,
                           toastLength: Toast.LENGTH_SHORT,
                           gravity: ToastGravity.CENTER,
                           timeInSecForIosWeb: 1,
@@ -455,7 +462,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                       totalMinutes = enteredValue.toInt();
                     } else {
                       Fluttertoast.showToast(
-                        msg: 'Please select a unit',
+                        msg: AppLocalizations.of(context)!.pleaseSelectAUnit,
                         toastLength: Toast.LENGTH_SHORT,
                         gravity: ToastGravity.CENTER,
                         timeInSecForIosWeb: 1,
@@ -473,7 +480,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                         widget.task.id!, totalMinutes.toString());
                     Navigator.of(context).pop();
                     Fluttertoast.showToast(
-                      msg: 'Task Updated',
+                      msg: AppLocalizations.of(context)!.taskUpdated,
                       toastLength: Toast.LENGTH_SHORT,
                       gravity: ToastGravity.CENTER,
                       timeInSecForIosWeb: 1,
@@ -490,9 +497,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 20),
                   ),
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  child: Text(
+                    AppLocalizations.of(context)!.save,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ],

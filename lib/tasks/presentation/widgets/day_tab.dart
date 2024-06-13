@@ -409,9 +409,9 @@ class DayPageState extends ConsumerState<DayPage>
         const Padding(padding: EdgeInsets.symmetric(horizontal: 60)),
         Row(
           children: [
-            const Text(
-              'Total -',
-              style: TextStyle(
+            Text(
+              '${AppLocalizations.of(context)!.total} -',
+              style: const TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
@@ -419,7 +419,7 @@ class DayPageState extends ConsumerState<DayPage>
               ),
             ),
             Text(
-              ' ${totalHours.toStringAsFixed(1)}hrs/Day',
+              ' ${totalHours.toStringAsFixed(1)} ${AppLocalizations.of(context)!.hoursPerDay}',
               style: TextStyle(
                 fontFamily: 'Poppins',
                 fontSize: 17,
@@ -433,13 +433,11 @@ class DayPageState extends ConsumerState<DayPage>
     );
   }
 
-  
-
   Widget _buildNoTasksWidget() {
-    return const Center(
+    return Center(
       child: Text(
-        'No Task Available',
-        style: TextStyle(
+        AppLocalizations.of(context)!.noTaskAvailable,
+        style: const TextStyle(
           fontSize: 20,
           fontFamily: 'Poppins',
           fontStyle: FontStyle.italic,

@@ -98,5 +98,17 @@
   "tasksAddedSuccessfully": "Tâche(s) ajoutée(s) avec succès",
   "taskAlreadyExistsForThisDate": "La tâche existe déjà pour cette date",
   "done": "Terminé",
-  "enterNumberOfDays": "Entrez le nombre de jours"
+  "enterNumberOfDays": "Entrez le nombre de jours",
+  "workingHours": "Heures de travail",
+  "notAvailable": "Indisponible",
+  "selectedDate": "Date sélectionnée",
+  "history": "Histoire",
+  "noTaskAvailable": "Aucune tâche disponible",
+  "youHaveToWorkAtLeastFifteenMinutes": "Vous devez travailler au moins 15 minutes",
+  "reopened": "Réouvert",
+  "completed": "Terminé",
+  "total": "Total",
+  "hoursPerDay": "heures/jour",
+  "timeRemaining": "Temps restant",
+  "select": "Sélectionner"
 }

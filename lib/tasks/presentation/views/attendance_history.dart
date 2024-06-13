@@ -68,7 +68,7 @@ class AttendanceHistoryScreen extends ConsumerWidget {
                 return Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Text(
-                    'Selected Date: $formattedDate',
+                    '${AppLocalizations.of(context)!.selectedDate}: $formattedDate',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -81,7 +81,7 @@ class AttendanceHistoryScreen extends ConsumerWidget {
           ),
           Expanded(
             // Filtering Attendance Records by Selected Date
-            child:Consumer(
+            child: Consumer(
               builder: (context, ref, _) {
                 final selectedDate =
                     ref.watch(dateRangeProvider)?.start ?? DateTime.now();

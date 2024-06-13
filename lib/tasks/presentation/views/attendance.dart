@@ -182,13 +182,17 @@ class _AttendanceLocationScreenState
   void dispose() async {
     // _workingHoursController.dispose();
     _timer.cancel();
+    _clearUser();
+    super.dispose();
+  }
+
+  Future<void> _clearUser() async {
     final userId = ref.read(currentUserProvider);
     if (userId != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('lastCheckInTime_$userId');
       await prefs.remove('isTimerRunning_$userId');
     }
-    super.dispose();
   }
 
   Container _buildTimerBox(String value) {
@@ -242,9 +246,9 @@ class _AttendanceLocationScreenState
           PopupMenuButton(
             itemBuilder: (context) => [
               PopupMenuItem(
-                child: const Text(
-                  'History',
-                  style: TextStyle(
+                child: Text(
+                  AppLocalizations.of(context)!.history,
+                  style: const TextStyle(
                     color: Colors.black,
                     fontSize: 20,
                     fontFamily: 'Poppins',
@@ -408,7 +412,7 @@ class _AttendanceLocationScreenState
               ),
               const SizedBox(height: 10),
               Text(
-                'Working Hours :  ${(progress * 100).toStringAsFixed(0)}%',
+                '${AppLocalizations.of(context)!.workingHours} :  ${(progress * 100).toStringAsFixed(0)}%',
                 style: const TextStyle(
                   fontSize: 16,
                   fontFamily: 'poppins',
@@ -524,29 +528,29 @@ class _AttendanceLocationScreenState
                       size: 30,
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      "${placemarks![0].street},${placemarks![0].locality},${placemarks![0].postalCode}, ${placemarks![0].country}"
-                          .toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 9,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.bold,
+                    Center(
+                      child: Text(
+                        "${placemarks![0].street},${placemarks![0].locality},${placemarks![0].postalCode}, ${placemarks![0].country}"
+                            .toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 9,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
                 )
               else
-                const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        color: Colors.black,
-                        size: 30,
-                      ),
-                      Text("Not Available"),
-                    ]),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(
+                    Icons.location_on,
+                    color: Colors.black,
+                    size: 30,
+                  ),
+                  Text(AppLocalizations.of(context)!.notAvailable),
+                ]),
             ],
           ),
         ),

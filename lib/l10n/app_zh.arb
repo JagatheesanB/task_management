@@ -98,5 +98,17 @@
   "tasksAddedSuccessfully": "任务已成功添加",
   "taskAlreadyExistsForThisDate": "该日期已存在任务",
   "done": "完成",
-  "enterNumberOfDays": "输入天数"
+  "enterNumberOfDays": "输入天数",
+  "workingHours": "工作时间",
+  "notAvailable": "不可用",
+  "selectedDate": "选择的日期",
+  "history": "历史",
+  "noTaskAvailable": "无任务可用",
+  "youHaveToWorkAtLeastFifteenMinutes": "您至少需要工作15分钟",
+  "reopened": "重新打开",
+  "completed": "已完成",
+  "total": "总计",
+  "hoursPerDay": "小时/天",
+  "timeRemaining": "剩余时间",
+  "select": "选择"
 }

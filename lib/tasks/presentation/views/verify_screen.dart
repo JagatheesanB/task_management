@@ -86,7 +86,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     await widget.myauth.sendOTP();
     if (context.mounted) {
       AnimatedSnackBar.material(
-        'OTP has been sent',
+        AppLocalizations.of(context)!.otpHasBeenSent,
         type: AnimatedSnackBarType.info,
       ).show(context);
     }
@@ -100,7 +100,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     startTimer();
     if (context.mounted) {
       AnimatedSnackBar.material(
-        'OTP has been resent',
+        AppLocalizations.of(context)!.otpHasBeenResent,
         type: AnimatedSnackBarType.info,
       ).show(context);
     }
@@ -110,9 +110,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Verify OTP",
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.verifyOTP,
+          style: const TextStyle(
             color: Colors.black,
             fontSize: 20,
             fontFamily: 'Poppins',
@@ -126,9 +126,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              const Text(
-                "Enter the OTP sent to your email",
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.enterTheOTPSentToYourEmail,
+                style: const TextStyle(
                   fontSize: 18,
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.w400,
@@ -212,9 +212,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 ),
               ],
               if (_isOtpExpired)
-                const Text(
-                  "OTP has expired. Please resend OTP.",
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.otpHasExpired,
+                  style: const TextStyle(
                     color: Colors.red,
                     fontSize: 16,
                     fontFamily: 'Poppins',
@@ -226,9 +226,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               if (!_isOtpVerified)
                 TextButton(
                   onPressed: _isOtpExpired ? resendOtp : null,
-                  child: const Text(
-                    "Resend OTP",
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context)!.resendOTP,
+                    style: const TextStyle(
                       color: Colors.blue,
                       fontSize: 16,
                       fontFamily: 'Poppins',

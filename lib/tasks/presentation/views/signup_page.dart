@@ -112,7 +112,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
     myauth.setConfig(
       appEmail: "jagatheesan@gmail.com",
-      appName: "Time Lance",
+      appName: "TimeLance",
       userEmail: email,
       otpLength: 4,
       otpType: OTPType.digitsOnly,

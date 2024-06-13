@@ -6,6 +6,7 @@ import 'package:task_management/tasks/domain/models/task.dart';
 import 'package:task_management/tasks/presentation/providers/task_provider.dart';
 import 'package:task_management/tasks/presentation/views/add_task.dart';
 import 'package:task_management/tasks/presentation/widgets/tasktile.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WeekPage extends ConsumerStatefulWidget {
   final List<Tasks> taskList;
@@ -280,7 +281,7 @@ class WeekPageState extends ConsumerState<WeekPage>
     DateTimeRange? nextDateRange = await showDateRangePicker(
         context: context,
         initialDateRange: dateRange,
-        firstDate: DateTime(2022),
+        firstDate: DateTime(2024),
         lastDate: DateTime(2025));
 
     if (nextDateRange == null) return;
@@ -396,10 +397,10 @@ class WeekPageState extends ConsumerState<WeekPage>
   }
 
   Widget _buildNoTasksWidget() {
-    return const Center(
+    return Center(
       child: Text(
-        'No Task Available',
-        style: TextStyle(
+        AppLocalizations.of(context)!.noTaskAvailable,
+        style: const TextStyle(
             fontSize: 20,
             fontFamily: 'Poppins',
             fontStyle: FontStyle.italic,
@@ -409,7 +410,7 @@ class WeekPageState extends ConsumerState<WeekPage>
     );
   }
 
-  String _getFormattedDate() {
-    return DateFormat('dd MMMM yyyy').format(_selectedDate);
-  }
+  // String _getFormattedDate() {
+  //   return DateFormat('dd MMMM yyyy').format(_selectedDate);
+  // }
 }
