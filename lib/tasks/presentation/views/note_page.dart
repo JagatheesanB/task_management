@@ -262,7 +262,7 @@ class _CommentsDialogState extends ConsumerState<CommentsDialog> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Notes for ${widget.task.taskName}',
+          '${AppLocalizations.of(context)!.notesFor}${widget.task.taskName}',
           style: const TextStyle(
             fontFamily: 'Poppins',
             fontSize: 20,
@@ -407,7 +407,8 @@ class _CommentsDialogState extends ConsumerState<CommentsDialog> {
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please add a note before submit';
+                  return AppLocalizations.of(context)!
+                      .pleaseAddNoteBeforeSubmit;
                 }
                 return null;
               },

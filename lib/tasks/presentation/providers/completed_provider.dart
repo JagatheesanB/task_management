@@ -10,28 +10,27 @@ class CompletedTasksNotifier extends StateNotifier<List<CompletedTask>> {
 
   CompletedTasksNotifier(this._taskRepository) : super([]);
 
-  void addCompletedTask(int id, Tasks task, int seconds, int userId,DateTime dateTime) async {
-    final completedTask = CompletedTask(
-      id: id,
-      task: task,
-      seconds: seconds,
-      userId: userId, dateTime: dateTime,
-    );
-    state = [...state, completedTask];
-
-    try {
-      // print(
-      //     'Getting task to complete is ${task.taskName} with $seconds seconds');
-      int id = await _taskRepository.insertCompletedTask(
-          task, userId, seconds);
-      task.id = id;
-      // print('The completed task is ${task.taskName} with $seconds seconds');
-    } catch (e) {
-      // print('Error adding completed task in provider: $e');
-      state = List.of(state)..removeLast();
-      CustomException("Something went wrong while adding completed task");
-    }
-  }
+  // void addCompletedTask(int id, Tasks task, int seconds, int userId,DateTime dateTime) async {
+  //   final completedTask = CompletedTask(
+  //     id: id,
+  //     task: task,
+  //     seconds: seconds,
+  //     userId: userId, dateTime: dateTime,
+  //   );
+  //   state = [...state, completedTask];
+  //   try {
+  //     // print(
+  //     //     'Getting task to complete is ${task.taskName} with $seconds seconds');
+  //     int id = await _taskRepository.insertCompletedTask(
+  //         task, userId, seconds);
+  //     task.id = id;
+  //     // print('The completed task is ${task.taskName} with $seconds seconds');
+  //   } catch (e) {
+  //     // print('Error adding completed task in provider: $e');
+  //     state = List.of(state)..removeLast();
+  //     CustomException("Something went wrong while adding completed task");
+  //   }
+  // }
 
   Future<void> unCompletedTask(Tasks task) async {
     try {
@@ -41,6 +40,50 @@ class CompletedTasksNotifier extends StateNotifier<List<CompletedTask>> {
       CustomException("Something went wrong while unompleted task");
     }
   }
+
+  Future<void> addCompletedTask(
+      int id, Tasks task, int seconds, int userId, DateTime dateTime) async {
+    final completedTask = CompletedTask(
+      id: id,
+      task: task,
+      seconds: seconds,
+      userId: userId,
+      dateTime: dateTime,
+    );
+
+    // Update local state
+    state = [...state, completedTask];
+    // print('Completed Task - ${completedTask.task}');
+    try {
+      await _taskRepository.insertCompletedTask(task, userId, seconds);
+      // Update the task ID with the returned ID from the DB
+      final updatedTask = completedTask.copyWith(id: task.id);
+      state = [
+        for (final t in state)
+          if (t.id == id) updatedTask else t,
+      ];
+    } catch (e) {
+      // Revert the state on error
+      state = state.where((t) => t.id != id).toList();
+      throw CustomException("Something went wrong while adding completed task");
+    }
+  }
+
+  // Future<void> unCompletedTask(Tasks task) async {
+  //   try {
+  //     int taskId = await _taskRepository.unCompletedTask(task);
+  //     task.id = taskId;
+  //     state = [
+  //       for (final t in state)
+  //         if (t.task.taskName == task.taskName)
+  //           t.copyWith(task: task.copyWith(isCompleted: false))
+  //         else
+  //           t,
+  //     ];
+  //   } catch (e) {
+  //     throw CustomException("Something went wrong while uncompleting task");
+  //   }
+  // }
 
   Future<void> deleteCompletedTask(int taskId) async {
     // print("Provider $taskId");

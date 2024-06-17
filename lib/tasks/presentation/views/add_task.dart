@@ -29,6 +29,9 @@ class _AddTaskState extends ConsumerState<AddTask>
   final TextEditingController _daysController = TextEditingController();
   String _selectedInterval = 'DAY';
   late DateTime _selectedDate = DateTime.now();
+  double totalHours = 0;
+  final double workingHours = 8.0;
+  final double maxWorkingHours = 15.0;
 
   String get _formattedSelectedDateAndMonth {
     return '${AppLocalizations.of(context)!.date} ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}';
@@ -194,10 +197,11 @@ class _AddTaskState extends ConsumerState<AddTask>
   }
 
   Future<void> _showDatePicker(BuildContext context) async {
-    DateTime initialDate =
-        DateTime.now().isAfter(_selectedDate) ? DateTime.now() : _selectedDate;
-    DateTime minimumDate = initialDate.subtract(const Duration(days: 10));
-
+    DateTime now = DateTime.now();
+    DateTime initialDate = now.isAfter(_selectedDate) ? now : _selectedDate;
+    DateTime minimumDate = now;
+    DateTime maximumDate = now.add(const Duration(days: 365));
+// initialDate.subtract(const Duration(days: 15))
     showCupertinoModalPopup(
       context: context,
       builder: (context) => Container(
@@ -212,7 +216,7 @@ class _AddTaskState extends ConsumerState<AddTask>
                 mode: CupertinoDatePickerMode.date,
                 initialDateTime: initialDate,
                 minimumDate: minimumDate,
-                maximumDate: DateTime.now().add(const Duration(days: 15)),
+                maximumDate: maximumDate,
                 onDateTimeChanged: (DateTime newDate) {
                   setState(() {
                     _selectedDate = newDate;
@@ -242,6 +246,43 @@ class _AddTaskState extends ConsumerState<AddTask>
       final userId = ref.read(currentUserProvider) as int;
       final dbHelper = DatabaseHelper();
 
+      if (newTaskText.length > 30) {
+        if (context.mounted) {
+          Fluttertoast.showToast(
+            msg: AppLocalizations.of(context)!.taskTooLong,
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP_RIGHT,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        }
+        return;
+      }
+
+      // Check if the selected date is in the past
+      final now = DateTime.now();
+      final isSameDay = _selectedDate.year == now.year &&
+          _selectedDate.month == now.month &&
+          _selectedDate.day == now.day;
+      if (_selectedInterval == 'WEEK' &&
+          !isSameDay &&
+          _selectedDate.isBefore(now)) {
+        if (context.mounted) {
+          Fluttertoast.showToast(
+            msg: AppLocalizations.of(context)!.addTaskOnlyForFuture,
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.TOP_RIGHT,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        }
+        return;
+      }
+
       // Check if the task already exists
       final existingTasks = await dbHelper.getAllTasksWithUserId(userId);
       if (existingTasks.any((task) =>
@@ -260,7 +301,48 @@ class _AddTaskState extends ConsumerState<AddTask>
         return;
       }
 
-      // Add the task for the selected date
+      if (_selectedInterval == 'WEEK') {
+        final daysText = _daysController.text.trim();
+        if (daysText.isNotEmpty) {
+          final int? numOfDays = int.tryParse(daysText);
+          if (numOfDays != null && numOfDays > 0) {
+            if (numOfDays > 20) {
+              if (context.mounted) {
+                Fluttertoast.showToast(
+                  msg: AppLocalizations.of(context)!.maxDaysExceeded,
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.TOP_RIGHT,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                  fontSize: 16.0,
+                );
+              }
+              return;
+            }
+
+            // Iterating over the number of days and adding tasks
+            for (int i = 1; i < numOfDays; i++) {
+              // Start from 1
+              final nextDate = _selectedDate.add(Duration(days: i));
+              final nextTask = Tasks(
+                id: 0,
+                taskName: newTaskText,
+                dateTime: nextDate,
+                interval: _selectedInterval,
+                createdAt: DateTime.now(),
+                taskHours: '1',
+              );
+              await ref.read(taskProvider.notifier).addTask(nextTask, userId);
+              await ref
+                  .read(taskHistoryProvider.notifier)
+                  .addTaskToHistory(nextTask, userId);
+            }
+          }
+        }
+      }
+
+      // Add the task for the selected date only if numOfDays <= 20
       final newTask = Tasks(
         id: 0,
         taskName: newTaskText,
@@ -273,32 +355,6 @@ class _AddTaskState extends ConsumerState<AddTask>
       await ref
           .read(taskHistoryProvider.notifier)
           .addTaskToHistory(newTask, userId);
-
-      if (_selectedInterval == 'WEEK') {
-        final daysText = _daysController.text.trim();
-        if (daysText.isNotEmpty) {
-          final int? numOfDays = int.tryParse(daysText);
-          if (numOfDays != null && numOfDays > 0) {
-            // Iterating over the number of days and adding tasks
-            for (int i = 1; i < numOfDays; i++) {
-              // Start from 1
-              final nextDate = _selectedDate.add(Duration(days: i));
-              final nextTask = Tasks(
-                id: 0,
-                taskName: newTaskText,
-                dateTime: nextDate,
-                interval: _selectedInterval,
-                createdAt: DateTime.now(),
-                // taskHours: '',
-              );
-              await ref.read(taskProvider.notifier).addTask(nextTask, userId);
-              await ref
-                  .read(taskHistoryProvider.notifier)
-                  .addTaskToHistory(nextTask, userId);
-            }
-          }
-        }
-      }
 
       if (context.mounted) {
         Fluttertoast.showToast(

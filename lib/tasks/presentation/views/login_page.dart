@@ -31,7 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   final DatabaseHelper db = DatabaseHelper();
 
-  late Locale _locale;
+  late Locale _locale = ref.watch(selectedLocaleProvider);
 
   @override
   void initState() {
@@ -45,7 +45,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _loadLocale() {
-    _locale = ref.watch(selectedLocaleProvider);
+    _locale;
+    // print(_locale);
   }
 
   String encryptPassword(String password) {
@@ -186,9 +187,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(
                   height: 40,
                 ),
-                TextField(
+                TextFormField(
                   controller: emailController,
                   textAlign: TextAlign.start,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return AppLocalizations.of(context)!.emailIsRequired;
+                    }
+                    return null;
+                  },
                   style: const TextStyle(
                     color: Color.fromARGB(255, 0, 0, 0),
                     fontSize: 13,
@@ -202,6 +210,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Icon(
                         Icons.person_3,
                         color: Colors.black,
+                      ),
+                    ),
+                    border: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        width: 1,
+                        color: Colors.purple,
                       ),
                     ),
                     labelStyle: const TextStyle(
@@ -229,8 +243,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(
                   height: 20,
                 ),
-                TextField(
+                TextFormField(
                   controller: passController,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return AppLocalizations.of(context)!.passwordIsRequired;
+                    }
+                    return null;
+                  },
                   textAlign: TextAlign.start,
                   style: const TextStyle(
                     color: Color.fromARGB(255, 0, 0, 0),
@@ -246,6 +267,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Icon(
                         Icons.password_sharp,
                         color: Colors.black,
+                      ),
+                    ),
+                    border: const OutlineInputBorder(
+                      borderSide: BorderSide(
+                        width: 1,
+                        color: Colors.purple,
                       ),
                     ),
                     labelStyle: const TextStyle(

@@ -50,6 +50,37 @@ class TaskNotifier extends StateNotifier<List<Tasks>> {
     }
   }
 
+  void completeTaskByName(String taskName) {
+    List<Tasks> tasks = state;
+    for (var task in tasks) {
+      if (task.taskName == taskName) {
+        task.isCompleted = true;
+      }
+    }
+    state = tasks;
+  }
+
+  // Having bug
+  void uncompleteTaskByName(String taskName) {
+    List<Tasks> tasks = state;
+    for (var task in tasks) {
+      if (task.taskName == taskName) {
+        task.isCompleted = false;
+      }
+    }
+    state = tasks;
+  }
+
+  void updateTaskById(int taskID, String hours) {
+    List<Tasks> tasks = state;
+    for (var task in tasks) {
+      if (task.id == taskID) {
+        task.taskHours = hours;
+      }
+    }
+    state = tasks;
+  }
+
   void deleteTask(int taskId) async {
     if (state.any((task) => task.id == taskId)) {
       var taskList = List<Tasks>.from(state);

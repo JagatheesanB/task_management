@@ -332,98 +332,9 @@
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:task_management/tasks/domain/models/completed.dart';
-
-class ExcelGenerator extends ConsumerStatefulWidget {
-  final List<CompletedTask> completedTasks;
-
-  const ExcelGenerator({Key? key, required this.completedTasks})
-      : super(key: key);
-
-  @override
-  ConsumerState createState() => _ExcelGeneratorState();
-}
-
-class _ExcelGeneratorState extends ConsumerState<ExcelGenerator> {
-  late File excelFile;
-
-  @override
-  void initState() {
-    super.initState();
-    generateExcel();
-  }
-
-  String _getDisplayTime(String taskHours) {
-    int totalMinutes = int.parse(taskHours);
-    if (totalMinutes >= 60) {
-      int hours = totalMinutes ~/ 60;
-      int minutes = totalMinutes % 60;
-      return '$hours H $minutes M';
-    } else {
-      return '$totalMinutes M';
-    }
-  }
-
-  Future<void> generateExcel() async {
-    var excel = Excel.createExcel();
-    var sheet = excel['CompletedTasks'];
-
-    // Adding header row
-    sheet.appendRow(['Task Name', 'Time Spent']);
-
-    for (var completedTask in widget.completedTasks) {
-      String displayTime = _getDisplayTime(completedTask.seconds.toString());
-      sheet.appendRow([completedTask.task.taskName.toUpperCase(), displayTime]);
-    }
-
-    // Save the Excel to a file
-    final output = await getTemporaryDirectory();
-    excelFile = File('${output.path}/Completed_Tasks.xlsx');
-    excelFile.writeAsBytesSync(excel.save()!);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.generateExcel,
-          style: const TextStyle(
-              fontFamily: 'Poppins', fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ExcelDisplayPage(excelFile: excelFile),
-              ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purple,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              )),
-          child: Text(
-            AppLocalizations.of(context)!.generateExcel,
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class ExcelDisplayPage extends StatelessWidget {
   final File excelFile;
@@ -544,3 +455,81 @@ class ExcelDisplayPage extends StatelessWidget {
         .toList();
   }
 }
+
+
+// class ExcelGenerator extends ConsumerStatefulWidget {
+//   final List<CompletedTask> completedTasks;
+//   const ExcelGenerator({Key? key, required this.completedTasks})
+//       : super(key: key);
+//   @override
+//   ConsumerState createState() => _ExcelGeneratorState();
+// }
+// class _ExcelGeneratorState extends ConsumerState<ExcelGenerator> {
+//   late File excelFile;
+//   @override
+//   void initState() {
+//     super.initState();
+//     generateExcel();
+//   }
+//   String _getDisplayTime(String taskHours) {
+//     int totalMinutes = int.parse(taskHours);
+//     if (totalMinutes >= 60) {
+//       int hours = totalMinutes ~/ 60;
+//       int minutes = totalMinutes % 60;
+//       return '$hours H $minutes M';
+//     } else {
+//       return '$totalMinutes M';
+//     }
+//   }
+//   Future<void> generateExcel() async {
+//     var excel = Excel.createExcel();
+//     var sheet = excel['CompletedTasks'];
+//     // Adding header row
+//     sheet.appendRow(['Task Name', 'Time Spent']);
+//     for (var completedTask in widget.completedTasks) {
+//       String displayTime = _getDisplayTime(completedTask.seconds.toString());
+//       sheet.appendRow([completedTask.task.taskName.toUpperCase(), displayTime]);
+//     }
+//     // Save the Excel to a file
+//     final output = await getTemporaryDirectory();
+//     excelFile = File('${output.path}/Completed_Tasks.xlsx');
+//     excelFile.writeAsBytesSync(excel.save()!);
+//   }
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text(
+//           AppLocalizations.of(context)!.generateExcel,
+//           style: const TextStyle(
+//               fontFamily: 'Poppins', fontWeight: FontWeight.bold),
+//         ),
+//       ),
+//       body: Center(
+//         child: ElevatedButton(
+//           onPressed: () {
+//             Navigator.push(
+//               context,
+//               MaterialPageRoute(
+//                 builder: (context) => ExcelDisplayPage(excelFile: excelFile),
+//               ),
+//             );
+//           },
+//           style: ElevatedButton.styleFrom(
+//               backgroundColor: Colors.purple,
+//               shape: RoundedRectangleBorder(
+//                 borderRadius: BorderRadius.circular(10),
+//               )),
+//           child: Text(
+//             AppLocalizations.of(context)!.generateExcel,
+//             style: const TextStyle(
+//               fontFamily: 'Poppins',
+//               fontWeight: FontWeight.bold,
+//               color: Colors.white,
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

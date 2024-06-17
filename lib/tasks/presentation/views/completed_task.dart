@@ -1,7 +1,11 @@
+import 'dart:io';
+
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:task_management/tasks/domain/models/completed.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:task_management/tasks/presentation/providers/auth_provider.dart';
@@ -49,6 +53,27 @@ class _CompletedTasksPageState extends ConsumerState<CompletedTasksPage> {
   //   }).toList();
   // }
 
+  // void _navigateToExcelPage() async {
+  //   int? userId = ref.read(currentUserProvider);
+  //   if (userId != null) {
+  //     List<CompletedTask> tasks = await ref
+  //         .read(completedTasksprovider.notifier)
+  //         .getAllCompletedTasks(userId);
+  //     if (tasks.isNotEmpty) {
+  //       if (context.mounted) {
+  //         Navigator.push(
+  //           context,
+  //           MaterialPageRoute(
+  //             builder: (context) => ExcelGenerator(
+  //               completedTasks: tasks,
+  //             ),
+  //           ),
+  //         );
+  //       }
+  //     }
+  //   }
+  // }
+
   void _navigateToExcelPage() async {
     int? userId = ref.read(currentUserProvider);
     if (userId != null) {
@@ -57,17 +82,51 @@ class _CompletedTasksPageState extends ConsumerState<CompletedTasksPage> {
           .getAllCompletedTasks(userId);
       if (tasks.isNotEmpty) {
         if (context.mounted) {
+          File excelFile = await generateExcelFile(tasks);
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ExcelGenerator(
-                completedTasks: tasks,
+              builder: (context) => ExcelDisplayPage(
+                excelFile: excelFile,
               ),
             ),
           );
         }
+      } else {
+        Fluttertoast.showToast(
+          msg: 'No completed tasks to export',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
       }
     }
+  }
+
+  Future<File> generateExcelFile(List<CompletedTask> tasks) async {
+    var excel = Excel.createExcel();
+    var sheet = excel['CompletedTasks'];
+
+    // Adding header row
+    sheet.appendRow(['Task Name', 'Time Spent']);
+
+    for (var completedTask in tasks) {
+      String displayTime = _getDisplayTime(completedTask.seconds.toString());
+      sheet.appendRow([
+        completedTask.task.taskName.toUpperCase(),
+        displayTime,
+      ]);
+    }
+
+    // Save the Excel to a file
+    final output = await getTemporaryDirectory();
+    File excelFile = File('${output.path}/Completed_Tasks.xlsx');
+    excelFile.writeAsBytesSync(excel.save()!);
+
+    return excelFile;
   }
 
   String _getDisplayTime(String taskHours) {
@@ -75,9 +134,9 @@ class _CompletedTasksPageState extends ConsumerState<CompletedTasksPage> {
     if (totalMinutes >= 60) {
       int hours = totalMinutes ~/ 60;
       int minutes = totalMinutes % 60;
-      return '$hours h $minutes m';
+      return '$hours H $minutes M';
     } else {
-      return '$totalMinutes m';
+      return '$totalMinutes M';
     }
   }
 
@@ -96,97 +155,129 @@ class _CompletedTasksPageState extends ConsumerState<CompletedTasksPage> {
             color: Colors.black,
           ),
         ),
-        actions: [
-          // IconButton(
-          //   onPressed: () => _selectDate(context),
-          //   icon: const Icon(Icons.calendar_today, color: Colors.black),
-          // ),
-          IconButton(
-            onPressed: _navigateToExcelPage,
-            icon: const Icon(Icons.more_horiz_outlined, color: Colors.black),
-          ),
-        ],
       ),
-      body: Container(
-        color: Colors.white,
-        child: widget.completedTask.isEmpty //filteredTasks
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Lottie.asset(
-                      'assets/lottie/empty.json',
-                      width: 170,
-                      height: 170,
+      body: Stack(
+        children: [
+          Container(
+            color: Colors.white,
+            child: widget.completedTask.isEmpty //filteredTasks
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/empty.json',
+                          width: 170,
+                          height: 170,
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          AppLocalizations.of(context)!.noCompletedTasks,
+                          style: const TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.black,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
+                  )
+                : ListView.builder(
+                    itemCount: completedTasks.length,
+                    itemBuilder: (context, index) {
+                      final completedTask =
+                          completedTasks.reversed.toList()[index];
+                      String displayTime =
+                          _getDisplayTime(completedTask.seconds.toString());
+
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              completedTask.task.taskName,
+                              style: const TextStyle(
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: Colors.black,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'Time spent: $displayTime',
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                color: Colors.red,
+                              ),
+                              onPressed: () {
+                                ref
+                                    .read(completedTasksprovider.notifier)
+                                    .deleteCompletedTask(completedTask.id);
+                                Fluttertoast.showToast(
+                                  msg:
+                                      '${completedTask.task.taskName.toUpperCase()} ${AppLocalizations.of(context)!.taskDeleted.toUpperCase()}',
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.CENTER,
+                                  timeInSecForIosWeb: 1,
+                                  backgroundColor: Colors.red,
+                                  textColor: Colors.white,
+                                  fontSize: 16.0,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          Positioned(
+            bottom: 16.0,
+            right: 16.0,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: ElevatedButton(
+                onPressed: _navigateToExcelPage,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.purple,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    vertical: 15.0,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.file_download),
+                    const SizedBox(width: 8),
                     Text(
-                      AppLocalizations.of(context)!.noCompletedTasks,
+                      AppLocalizations.of(context)!.getExcel,
                       style: const TextStyle(
-                        fontStyle: FontStyle.italic,
-                        color: Colors.black,
-                        fontSize: 16,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16.0,
                       ),
                     ),
                   ],
                 ),
-              )
-            : ListView.builder(
-                itemCount: completedTasks.length,
-                itemBuilder: (context, index) {
-                  final completedTask = completedTasks.reversed.toList()[index];
-                  String displayTime =
-                      _getDisplayTime(completedTask.seconds.toString());
-
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          completedTask.task.taskName,
-                          style: const TextStyle(
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: Colors.black,
-                          ),
-                        ),
-                        subtitle: Text(
-                          'Time spent: $displayTime',
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline_rounded,
-                            color: Colors.red,
-                          ),
-                          onPressed: () {
-                            ref
-                                .read(completedTasksprovider.notifier)
-                                .deleteCompletedTask(completedTask.id);
-                            Fluttertoast.showToast(
-                              msg: '${completedTask.task.taskName} Deleted',
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.CENTER,
-                              timeInSecForIosWeb: 1,
-                              backgroundColor: Colors.red,
-                              textColor: Colors.white,
-                              fontSize: 16.0,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  );
-                },
               ),
+            ),
+          ),
+        ],
       ),
     );
   }

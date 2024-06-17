@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +32,8 @@ class WeekPageState extends ConsumerState<WeekPage>
   late DateTime _selectedDate;
   String selectedInterval = 'DAY';
   late List<Tasks> taskList;
+  // bool showTaskMovedMessage = false;
+  Set<DateTime> dateWithMovedTasks = {};
 
   DateTimeRange dateRange =
       DateTimeRange(start: DateTime(2024, 5, 1), end: DateTime.now());
@@ -46,6 +49,13 @@ class WeekPageState extends ConsumerState<WeekPage>
     super.initState();
     taskList = widget.taskList;
     _selectedDate = widget.selectedDate;
+
+    final now = DateTime.now();
+    final startOfWeek = now.subtract(Duration(days: now.weekday-1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+
+    dateRange = DateTimeRange(start: startOfWeek, end: endOfWeek);
+    _selectedDate = now;
   }
 
   @override
@@ -165,6 +175,7 @@ class WeekPageState extends ConsumerState<WeekPage>
                       setState(() {
                         _selectedDate = day;
                       });
+                      _checkAndShowMovedTasksMessage(day);
                     },
                     child: Column(
                       children: [
@@ -286,8 +297,21 @@ class WeekPageState extends ConsumerState<WeekPage>
 
     if (nextDateRange == null) return;
     setState(() {
-      dateRange = nextDateRange;
+      // dateRange = nextDateRange;
+      dateRange = DateTimeRange(
+          start: nextDateRange.start,
+          end: nextDateRange.start.add(const Duration(days: 6)));
     });
+    _selectedDate = dateRange.start;
+  }
+
+  void _checkAndShowMovedTasksMessage(DateTime selectedDate) {
+    if (dateWithMovedTasks.contains(selectedDate)) {
+      AnimatedSnackBar.material(
+        'incompleteTaskMovedMessage',
+        type: AnimatedSnackBarType.error,
+      ).show(context);
+    }
   }
 
   // Widget _week() {
@@ -346,7 +370,7 @@ class WeekPageState extends ConsumerState<WeekPage>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.0),
       ),
-      backgroundColor: Colors.blue,
+      backgroundColor: Colors.purple,
       child: const Icon(
         Icons.add,
         color: Colors.white,
@@ -357,21 +381,23 @@ class WeekPageState extends ConsumerState<WeekPage>
 
   void _previousWeek() {
     setState(() {
+      _selectedDate = _selectedDate.subtract(const Duration(days: 7));
       dateRange = DateTimeRange(
-        start: dateRange.start.subtract(const Duration(days: 7)),
-        end: dateRange.end.subtract(const Duration(days: 7)),
+        start: _selectedDate,
+        end: _selectedDate.add(const Duration(days: 6)),
       );
-      _selectedDate = dateRange.start;
+      // _selectedDate = dateRange.start;
     });
   }
 
   void _nextWeek() {
     setState(() {
+      _selectedDate = _selectedDate.add(const Duration(days: 7));
       dateRange = DateTimeRange(
-        start: dateRange.start.add(const Duration(days: 7)),
-        end: dateRange.end.add(const Duration(days: 7)),
+        start: _selectedDate,
+        end: _selectedDate.add(const Duration(days: 6)),
       );
-      _selectedDate = dateRange.start;
+      // _selectedDate = dateRange.start;
     });
   }
 

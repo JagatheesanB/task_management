@@ -114,14 +114,12 @@ class DatabaseHelper {
 
   // Future<String?> getUserEmailByBiometricId(String biometricId) async {
   //   final Database db = await database;
-
   //   final List<Map<String, dynamic>> result = await db.query(
   //     'users',
   //     columns: ['userName'],
   //     where: 'biometricId = ?',
   //     whereArgs: [biometricId],
   //   );
-
   //   if (result.isNotEmpty) {
   //     return result.first['userName'] as String?;
   //   } else {
@@ -254,29 +252,70 @@ class DatabaseHelper {
     });
   }
 
+  // Future<List<Tasks>> getAllTasksWithUserId(int userId) async {
+  //   final Database db = await database;
+  //   // Fetch all tasks for the user
+  //   final List<Map<String, dynamic>> allTasksMaps = await db.query(
+  //     'tasks',
+  //     where: 'userId = ?',
+  //     whereArgs: [userId],
+  //   );
+  //   print('All tasks maps - $allTasksMaps');
+  //   return List.generate(allTasksMaps.length, (i) {
+  //     return Tasks(
+  //       id: allTasksMaps[i]['id'],
+  //       taskName: allTasksMaps[i]['taskName'],
+  //       isCompleted: allTasksMaps[i]['isCompleted'] == 1,
+  //       dateTime: DateTime.parse(allTasksMaps[i]['dateTime']),
+  //       interval: allTasksMaps[i]['interval'],
+  //       taskHours: allTasksMaps[i]['taskHours'],
+  //       createdAt: allTasksMaps[i]['createdAt'] != null
+  //           ? DateTime.parse(allTasksMaps[i]['createdAt'])
+  //           : DateTime.now(),
+  //     );
+  //   });
+  // }
+
   Future<List<Tasks>> getAllTasksWithUserId(int userId) async {
     final Database db = await database;
-    // Fetch all tasks for the user
-    final List<Map<String, dynamic>> allTasksMaps = await db.query(
+
+    // Fetch all tasks for the user, both completed and not completed
+    final List<Map<String, dynamic>> maps = await db.query(
       'tasks',
       where: 'userId = ?',
       whereArgs: [userId],
     );
-    // print('All tasks maps - $allTasksMaps');
-
-    return List.generate(allTasksMaps.length, (i) {
-      return Tasks(
-        id: allTasksMaps[i]['id'],
-        taskName: allTasksMaps[i]['taskName'],
-        isCompleted: allTasksMaps[i]['isCompleted'] == 1,
-        dateTime: DateTime.parse(allTasksMaps[i]['dateTime']),
-        interval: allTasksMaps[i]['interval'],
-        taskHours: allTasksMaps[i]['taskHours'],
-        createdAt: allTasksMaps[i]['createdAt'] != null
-            ? DateTime.parse(allTasksMaps[i]['createdAt'])
+    print('Maps : $maps');
+    List<Tasks> tasks = [];
+    for (var map in maps) {
+      Tasks task = Tasks(
+        id: map['id'],
+        taskName: map['taskName'],
+        isCompleted: map['isCompleted'] == 1,
+        dateTime: DateTime.parse(map['dateTime']),
+        interval: map['interval'],
+        taskHours: map['taskHours'],
+        createdAt: map['createdAt'] != null
+            ? DateTime.parse(map['createdAt'])
             : DateTime.now(),
       );
-    });
+
+      task = updateTaskDateIfNeeded(task);
+
+      tasks.add(task);
+    }
+    // tasks = tasks
+    //     .where((task) => task.user?.userId == userId && !task.isCompleted)
+    //     .toList();
+    return tasks;
+  }
+
+  Tasks updateTaskDateIfNeeded(Tasks task) {
+    if (!task.isCompleted && task.dateTime!.isBefore(DateTime.now())) {
+      int daysDifference = DateTime.now().difference(task.dateTime!).inDays;
+      task.dateTime = task.dateTime!.add(Duration(days: daysDifference));
+    }
+    return task;
   }
 
   // Get All Tasks with UserId
@@ -344,29 +383,63 @@ class DatabaseHelper {
 
   // Insert completed task into the database
 
+  // Future<int> insertCompletedTask(Tasks task, int userId, int seconds) async {
+  //   // //print('hhhhhh $task');
+  //   final Database db = await database;
+  //   try {
+  //     int id = await db.insert(
+  //       'completed_tasks',
+  //       {
+  //         'taskName': task.taskName,
+  //         'userId': userId,
+  //         'seconds': seconds,
+  //         'dateTime': DateTime.now().toIso8601String()
+  //       },
+  //     );
+  //     //print('Completed ID : ${task.id}');
+  //     // await db.rawUpdate(
+  //     //     'UPDATE tasks SET isCompleted=1 WHERE id=?',
+  //     //     [task.id]);
+  //     await db.rawUpdate(
+  //       'UPDATE tasks SET isCompleted = 1 WHERE taskName = ? AND isCompleted = 0',
+  //       [task.taskName],
+  //     );
+  //     //print('Completed task added successfully: ${task.taskName}');
+  //     return id;
+  //   } catch (e) {
+  //     //print('Error adding completed task: $e');
+  //     CustomException("Something went wrong while in Completed task");
+  //   }
+  //   return 0;
+  // }
+
   Future<int> insertCompletedTask(Tasks task, int userId, int seconds) async {
-    // //print('hhhhhh $task');
     final Database db = await database;
+    final DateTime now = DateTime.now();
 
     try {
-      int id = await db.insert(
+      int completedTaskId = await db.insert(
         'completed_tasks',
         {
           'taskName': task.taskName,
           'userId': userId,
           'seconds': seconds,
+          'dateTime': now.toIso8601String(),
         },
       );
-      //print('Completed ID : ${task.id}');
-      await db
-          .rawUpdate('UPDATE tasks SET isCompleted=1 WHERE id=?', [task.id]);
-      //print('Completed task added successfully: ${task.taskName}');
-      return id;
+
+      await db.update(
+        'tasks',
+        {'isCompleted': 1},
+        where: 'taskName = ?',
+        whereArgs: [task.taskName],
+      );
+
+      return completedTaskId;
     } catch (e) {
-      //print('Error adding completed task: $e');
-      CustomException("Something went wrong while in Completed task");
+      // print('Error adding completed task: $e');
+      throw CustomException("Something went wrong while in Completed task");
     }
-    return 0;
   }
 
 // Delete Completed Task
@@ -414,7 +487,7 @@ class DatabaseHelper {
       where: 'userId = ?',
       whereArgs: [userId],
     );
-    // print('Completed Maps - $maps');
+    print('Completed Maps - $maps');
     return List.generate(maps.length, (i) {
       // Check if taskId is null before casting
       int? taskId = maps[i]['taskId'] as int?;

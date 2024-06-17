@@ -36,12 +36,10 @@ class _TaskTileState extends ConsumerState<TaskTile> {
   Timer? _timer;
   int seconds = 0;
   bool isTimerRunning = false;
-  // String? _taskComment;
 
   @override
   void initState() {
     super.initState();
-    // _saveTimer();
   }
 
   @override
@@ -53,7 +51,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
   void _completeTask() {
     if (seconds < 0) {
       Fluttertoast.showToast(
-        msg: 'You have to work at least 1 Minute',
+        msg: AppLocalizations.of(context)!.work_15_minutes,
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
         timeInSecForIosWeb: 1,
@@ -71,7 +69,8 @@ class _TaskTileState extends ConsumerState<TaskTile> {
         widget.task, int.parse(durationValue), userId!, DateTime.now());
 
     Fluttertoast.showToast(
-      msg: '${widget.task.taskName} ${AppLocalizations.of(context)!.completed}',
+      msg:
+          '${widget.task.taskName.toUpperCase()} ${AppLocalizations.of(context)!.completed.toUpperCase()}',
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.CENTER,
       timeInSecForIosWeb: 1,
@@ -88,7 +87,8 @@ class _TaskTileState extends ConsumerState<TaskTile> {
 
   void _uncompleteTask() {
     Fluttertoast.showToast(
-      msg: '${widget.task.taskName} ${AppLocalizations.of(context)!.reopened}',
+      msg:
+          '${widget.task.taskName.toUpperCase()} ${AppLocalizations.of(context)!.reopened.toUpperCase()}',
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.CENTER,
       timeInSecForIosWeb: 1,
@@ -97,29 +97,12 @@ class _TaskTileState extends ConsumerState<TaskTile> {
       fontSize: 16.0,
     );
     ref.read(completedTasksprovider.notifier).unCompletedTask(widget.task);
+    ref.read(taskProvider.notifier).uncompleteTaskByName(widget.task.taskName);
     setState(() {
       widget.task.isCompleted = false;
     });
     widget.onUpdateHours(0);
   }
-
-  // void _saveTimer() {
-  //   _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-  //     setState(() {
-  //       isTimerRunning = true;
-  //       seconds++;
-  //       if (seconds == 28800) {
-  //         NotificationManager.showTaskNotification(
-  //           fileName: widget.task.taskName,
-  //           message: 'You have been working for 8 hours on',
-  //         );
-  //       }
-  //       if (seconds % 3600 == 0) {
-  //         widget.onUpdateHours(1);
-  //       }
-  //     });
-  //   });
-  // }
 
   String _getDisplayTime(String taskHours) {
     int totalMinutes = int.parse(taskHours);
@@ -165,17 +148,6 @@ class _TaskTileState extends ConsumerState<TaskTile> {
         }
       },
       child: GestureDetector(
-        // onDoubleTapDown: (details) => {
-        //   if (!widget.task.isCompleted)
-        //     {
-        //       _showCommentDialog(),
-        //     }
-        // },
-        onDoubleTap: () {
-          if (widget.task.isCompleted) {
-            _uncompleteTask();
-          }
-        },
         onTap: () {
           if (!widget.task.isCompleted) {
             _editTaskName(context);
@@ -184,12 +156,30 @@ class _TaskTileState extends ConsumerState<TaskTile> {
         child: Container(
           padding: const EdgeInsets.all(13),
           decoration: BoxDecoration(
-            color: widget.task.isCompleted ? Colors.purple[100] : Colors.white,
+            gradient: widget.task.isCompleted
+                ? const LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 160, 88, 223),
+                      Color.fromARGB(255, 255, 255, 255)
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: widget.task.isCompleted ? null : Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: widget.task.isCompleted ? Colors.transparent : Colors.grey,
               width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.5),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -197,7 +187,11 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.pink[300],
+                  gradient: const LinearGradient(
+                    colors: [Colors.purple, Color.fromARGB(255, 99, 68, 182)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Center(
@@ -213,27 +207,14 @@ class _TaskTileState extends ConsumerState<TaskTile> {
               ),
               const SizedBox(width: 20),
               Expanded(
-                child: GestureDetector(
-                  // onTap: () {
-                  //   Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //       builder: (context) => CommentsDialog(
-                  //         task: widget.task,
-                  //       ),
-                  //     ),
-                  //   );
-                  // },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        taskFirstLetter,
-                        style: textStyle,
-                      ),
-                      // const SizedBox(height: 5), // Spacer
-                    ],
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      taskFirstLetter,
+                      style: textStyle,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(width: 10),
@@ -241,7 +222,11 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                 padding:
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -250,7 +235,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                     fontFamily: 'Poppins',
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -258,23 +243,56 @@ class _TaskTileState extends ConsumerState<TaskTile> {
               GestureDetector(
                 onTap: () {
                   if (!widget.task.isCompleted) {
+                    ref
+                        .read(taskProvider.notifier)
+                        .completeTaskByName(widget.task.taskName);
                     _completeTask();
                   }
                 },
-                child: Icon(
-                  widget.task.isCompleted ? Icons.done_all : Icons.done_outline,
-                  color:
-                      widget.task.isCompleted ? Colors.green : Colors.blueGrey,
-                  size: 30,
+                child: Tooltip(
+                  message: 'Complete task',
+                  preferBelow: true,
+                  child: Icon(
+                    widget.task.isCompleted
+                        ? Icons.done_all
+                        : Icons.done_outline,
+                    color: widget.task.isCompleted
+                        ? Colors.green
+                        : Colors.blueGrey,
+                    size: 30,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               PopupMenuButton(
                 itemBuilder: (context) => [
                   PopupMenuItem(
-                      // padding: const EdgeInsets.symmetric(horizontal: 5,vertical: 5),
+                    child: Text(
+                      AppLocalizations.of(context)!.note,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 18,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                    onTap: () {
+                      if (!widget.task.isCompleted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CommentsDialog(
+                              task: widget.task,
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  if (widget.task.isCompleted)
+                    PopupMenuItem(
                       child: Text(
-                        AppLocalizations.of(context)!.note,
+                        AppLocalizations.of(context)!.uncomplete,
                         style: const TextStyle(
                           color: Colors.black,
                           fontSize: 18,
@@ -283,20 +301,12 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                         ),
                       ),
                       onTap: () {
-                        if (!widget.task.isCompleted) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CommentsDialog(
-                                task: widget.task,
-                              ),
-                            ),
-                          );
-                        }
-                      }),
+                        _uncompleteTask();
+                      },
+                    ),
                 ],
                 child: const Icon(Icons.more_vert_rounded),
-              )
+              ),
             ],
           ),
         ),
@@ -380,7 +390,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                             value: durationUnit,
                             onChanged: (String? newValue) {
                               setState(() {
-                                durationUnit = newValue!;
+                                durationUnit = newValue;
                               });
                             },
                             items: [
@@ -434,7 +444,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                     if (durationUnit == 'hours') {
                       if (enteredValue < 0.5 || enteredValue > 24) {
                         Fluttertoast.showToast(
-                          msg: 'Please enter valid hours (0.5-24)',
+                          msg: AppLocalizations.of(context)!.valid_hours,
                           toastLength: Toast.LENGTH_SHORT,
                           gravity: ToastGravity.CENTER,
                           timeInSecForIosWeb: 1,
@@ -476,11 +486,16 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                     ref
                         .read(taskProvider.notifier)
                         .updateTaskName(editedTaskName, widget.task.id!);
+
+                    ref.read(taskProvider.notifier).updateTaskById(
+                        widget.task.id!, totalMinutes.toString());
+
                     ref.read(taskProvider.notifier).updateWorkingHours(
                         widget.task.id!, totalMinutes.toString());
                     Navigator.of(context).pop();
                     Fluttertoast.showToast(
-                      msg: AppLocalizations.of(context)!.taskUpdated,
+                      msg:
+                          '${widget.task.taskName.toUpperCase()} ${AppLocalizations.of(context)!.taskUpdated.toUpperCase()}',
                       toastLength: Toast.LENGTH_SHORT,
                       gravity: ToastGravity.CENTER,
                       timeInSecForIosWeb: 1,
@@ -518,13 +533,13 @@ class _TaskTileState extends ConsumerState<TaskTile> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
-          title: const Row(
+          title: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
-              SizedBox(width: 10),
+              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent),
+              const SizedBox(width: 10),
               Text(
-                'Delete Task',
-                style: TextStyle(
+                AppLocalizations.of(context)!.deleteTask,
+                style: const TextStyle(
                   fontFamily: 'Poppins',
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
@@ -532,9 +547,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
               ),
             ],
           ),
-          content: const Text(
-            'Are you sure you want to delete this task?',
-            style: TextStyle(
+          content: Text(
+            AppLocalizations.of(context)!.areYouSureYouWantToDeleteThisTask,
+            style: const TextStyle(
               fontFamily: 'Poppins',
               fontWeight: FontWeight.normal,
               fontSize: 18,
@@ -545,9 +560,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)!.cancel,
+                style: const TextStyle(
                   color: Colors.red,
                   fontSize: 16,
                 ),
@@ -559,7 +574,8 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                 final taskProviderNotifier = ref.read(taskProvider.notifier);
                 taskProviderNotifier.deleteTask(widget.task.id!);
                 Fluttertoast.showToast(
-                  msg: 'Task Deleted',
+                  msg:
+                      '${widget.task.taskName.toUpperCase()} ${AppLocalizations.of(context)!.taskDeleted.toUpperCase()}',
                   toastLength: Toast.LENGTH_SHORT,
                   gravity: ToastGravity.CENTER,
                   timeInSecForIosWeb: 1,
@@ -575,9 +591,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                'Delete',
-                style: TextStyle(
+              child: Text(
+                AppLocalizations.of(context)!.delete,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                 ),
@@ -588,165 +604,4 @@ class _TaskTileState extends ConsumerState<TaskTile> {
       },
     );
   }
-
-  // void _showCommentDialog() {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       String comment = _taskComment ?? '';
-
-  //       return AlertDialog(
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(10.0),
-  //         ),
-  //         title: const Text(
-  //           'Add Note',
-  //           style: TextStyle(
-  //             fontFamily: 'Poppins',
-  //             fontWeight: FontWeight.bold,
-  //             fontSize: 24,
-  //           ),
-  //         ),
-  //         content: TextField(
-  //           onChanged: (value) {
-  //             comment = value;
-  //           },
-  //           controller: TextEditingController(text: comment),
-  //           decoration: InputDecoration(
-  //             labelText: "Comment",
-  //             hintText: "Enter your comment here",
-  //             border: OutlineInputBorder(
-  //               borderRadius: BorderRadius.circular(10.0),
-  //             ),
-  //             contentPadding: const EdgeInsets.all(16),
-  //           ),
-  //         ),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //             child: const Text(
-  //               'Cancel',
-  //               style: TextStyle(color: Colors.red, fontSize: 16),
-  //             ),
-  //           ),
-  //           ElevatedButton(
-  //             onPressed: () {
-  //               // setState(() {
-  //               //   _taskComment = comment;
-  //               // });
-  //               final newComment = Comment(
-  //                 taskId: widget.task.id!,
-  //                 comment: comment,
-  //                 // createdAt: DateTime.now(),
-  //               );
-  //               print('BUI - Comment ${newComment.comment}');
-  //               ref.read(commentProvider.notifier).insertComment(newComment);
-  //               print('AUI - Comment ${newComment.comment}');
-  //               Navigator.of(context).pop();
-  //               Fluttertoast.showToast(
-  //                 msg: 'Comment Added',
-  //                 toastLength: Toast.LENGTH_SHORT,
-  //                 gravity: ToastGravity.CENTER,
-  //                 timeInSecForIosWeb: 1,
-  //                 backgroundColor: Colors.red,
-  //                 textColor: Colors.white,
-  //                 fontSize: 16.0,
-  //               );
-  //               return;
-  //             },
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: Colors.purple,
-  //               shape: RoundedRectangleBorder(
-  //                 borderRadius: BorderRadius.circular(10.0),
-  //               ),
-  //               padding:
-  //                   const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-  //             ),
-  //             child: const Text(
-  //               'Save',
-  //               style: TextStyle(color: Colors.white, fontSize: 16),
-  //             ),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-//   Future<void> _showHoursDialog(BuildContext context) async {
-//   final TextEditingController _hoursController = TextEditingController();
-//   String selectedUnit = 'minutes';
-//   await showDialog(
-//     context: context,
-//     builder: (BuildContext context) {
-//       return AlertDialog(
-//         title: const Text(
-//           'Select Time',
-//           style: TextStyle(
-//             fontFamily: 'Poppins',
-//             fontWeight: FontWeight.bold,
-//             fontSize: 20,
-//           ),
-//         ),
-//         content: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: <Widget>[
-//             TextField(
-//               controller: _hoursController,
-//               keyboardType: TextInputType.numberWithOptions(decimal: true),
-//               decoration: const InputDecoration(
-//                 labelText: 'Time',
-//               ),
-//             ),
-//             const SizedBox(height: 10),
-//             DropdownButton<String>(
-//               value: selectedUnit,
-//               items: <String>['minutes', 'hours'].map((String value) {
-//                 return DropdownMenuItem<String>(
-//                   value: value,
-//                   child: Text(value),
-//                 );
-//               }).toList(),
-//               onChanged: (String? newValue) {
-//                 setState(() {
-//                   selectedUnit = newValue!;
-//                 });
-//               },
-//             ),
-//           ],
-//         ),
-//         actions: <Widget>[
-//           TextButton(
-//             onPressed: () {
-//               Navigator.of(context).pop();
-//             },
-//             child: const Text(
-//               'Cancel',
-//               style: TextStyle(color: Colors.red),
-//             ),
-//           ),
-//           ElevatedButton(
-//             onPressed: () {
-//               double inputTime = double.parse(_hoursController.text);
-//               int timeInMinutes = selectedUnit == 'hours' ? (inputTime * 60).toInt() : inputTime.toInt();
-//               setState(() {
-//                 widget.task.taskHours = timeInMinutes.toString();
-//               });
-//               Navigator.of(context).pop();
-//             },
-//             style: ElevatedButton.styleFrom(
-//               backgroundColor: Colors.green,
-//             ),
-//             child: const Text(
-//               'Save',
-//               style: TextStyle(color: Colors.white),
-//             ),
-//           ),
-//         ],
-//       );
-//     },
-//   );
-// }
 }

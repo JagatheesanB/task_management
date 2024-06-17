@@ -14,9 +14,9 @@ class CompletedTask {
     required this.seconds,
     required this.dateTime,
   });
-  CompletedTask copyWith({Tasks? task, int? seconds}) {
+  CompletedTask copyWith({int? id, Tasks? task, int? seconds}) {
     return CompletedTask(
-        id: id,
+        id: id ?? this.id,
         task: task ?? this.task,
         seconds: seconds ?? this.seconds,
         userId: userId,

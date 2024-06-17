@@ -238,6 +238,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:task_management/tasks/domain/models/task.dart';
 import 'package:task_management/tasks/presentation/providers/task_provider.dart';
 import 'package:task_management/tasks/presentation/widgets/tasktile.dart';
@@ -268,6 +269,7 @@ class DayPageState extends ConsumerState<DayPage>
     with TickerProviderStateMixin {
   double totalHours = 0;
   final double workingHours = 8.0;
+  final double maxWorkingHours = 15.0;
   late List<Tasks> taskList;
   List<Tasks> dayTasks = [];
   String selectedInterval = 'DAY';
@@ -369,23 +371,36 @@ class DayPageState extends ConsumerState<DayPage>
   FloatingActionButton _addButton(BuildContext context) {
     return FloatingActionButton(
       heroTag: 'btn1',
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AddTask(
-              onIntervalSelected: _setSelectedInterval,
-              allowedIntervals: const ['DAY'],
-            ),
-          ),
-        ).then((_) {
-          _updateTaskHours();
-        });
-      },
+      onPressed: totalHours >= maxWorkingHours
+          ? () {
+              Fluttertoast.showToast(
+                msg: AppLocalizations.of(context)!.youHaveReachedMaxHours,
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.TOP,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.red,
+                textColor: Colors.white,
+                fontSize: 16.0,
+              );
+            }
+          : () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddTask(
+                    onIntervalSelected: _setSelectedInterval,
+                    allowedIntervals: const ['DAY'],
+                  ),
+                ),
+              ).then((_) {
+                _updateTaskHours();
+              });
+            },
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20.0),
       ),
-      backgroundColor: Colors.purple,
+      backgroundColor:
+          totalHours >= maxWorkingHours ? Colors.grey : Colors.purple,
       child: const Icon(
         Icons.add,
         color: Colors.white,
