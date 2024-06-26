@@ -244,16 +244,23 @@ class _AttendanceLocationScreenState
         centerTitle: true,
         actions: [
           PopupMenuButton(
+            color: Colors.black,
             itemBuilder: (context) => [
               PopupMenuItem(
-                child: Text(
-                  AppLocalizations.of(context)!.history,
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontFamily: 'Poppins',
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.history, color: Colors.white),
+                    const SizedBox(width: 10),
+                    Text(
+                      AppLocalizations.of(context)!.history,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
                 onTap: () {
                   Navigator.push(

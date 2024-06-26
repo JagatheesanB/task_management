@@ -1,7 +1,7 @@
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:flutter/material.dart';
 import 'package:email_otp/email_otp.dart';
 import 'package:flutter/services.dart';
-import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_management/tasks/data/dataSources/task_datasource.dart';
 import 'package:task_management/tasks/presentation/views/login_page.dart';
@@ -85,10 +85,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   void sendOtp() async {
     await widget.myauth.sendOTP();
     if (context.mounted) {
-      AnimatedSnackBar.material(
+      showAwesomeSnackBar(
         AppLocalizations.of(context)!.otpHasBeenSent,
-        type: AnimatedSnackBarType.info,
-      ).show(context);
+        ContentType.success,
+      );
     }
   }
 
@@ -99,11 +99,26 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     await widget.myauth.sendOTP();
     startTimer();
     if (context.mounted) {
-      AnimatedSnackBar.material(
+      showAwesomeSnackBar(
         AppLocalizations.of(context)!.otpHasBeenResent,
-        type: AnimatedSnackBarType.info,
-      ).show(context);
+        ContentType.help,
+      );
+      return;
     }
+  }
+
+  void showAwesomeSnackBar(String message, ContentType contentType) {
+    final snackBar = SnackBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      behavior: SnackBarBehavior.floating,
+      content: AwesomeSnackbarContent(
+        title: contentType == ContentType.failure ? 'error' : 'success',
+        message: message,
+        contentType: contentType,
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   @override
@@ -169,17 +184,17 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                             MaterialPageRoute(
                                 builder: (context) => const LoginScreen()),
                           );
-                          AnimatedSnackBar.material(
+                          showAwesomeSnackBar(
                             AppLocalizations.of(context)!.otpIsVerified,
-                            type: AnimatedSnackBarType.success,
-                          ).show(context);
+                            ContentType.success,
+                          );
                         }
                       } else {
                         if (context.mounted) {
-                          AnimatedSnackBar.material(
+                          showAwesomeSnackBar(
                             AppLocalizations.of(context)!.invalidOTP,
-                            type: AnimatedSnackBarType.error,
-                          ).show(context);
+                            ContentType.failure,
+                          );
                         }
                       }
                     },

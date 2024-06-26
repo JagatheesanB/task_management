@@ -4,8 +4,10 @@ import 'package:task_management/tasks/domain/models/completed.dart';
 import 'package:task_management/tasks/domain/models/task.dart';
 import 'package:task_management/tasks/domain/repositories/task_repository.dart';
 
+import '../../domain/models/chat.dart';
 import '../../domain/models/comment.dart';
 import '../../domain/models/history.dart';
+import '../../domain/models/users.dart';
 
 class TaskRepositoryImplementation implements TaskRepository {
   final DatabaseHelper _databaseHelper = DatabaseHelper();
@@ -16,8 +18,7 @@ class TaskRepositoryImplementation implements TaskRepository {
   }
 
   @override
-  Future<void> signup(
-      String userName, String userPassword) async {
+  Future<void> signup(String userName, String userPassword) async {
     await _databaseHelper.signup(userName, userPassword);
   }
 
@@ -166,5 +167,46 @@ class TaskRepositoryImplementation implements TaskRepository {
   @override
   Future<List<Comment>> getCommentsByTaskId(int taskId) async {
     return await _databaseHelper.getCommentsByTaskId(taskId);
+  }
+
+  @override
+  Future<List<Users>> getAllUsers(int loggedInUserId) async {
+    return await _databaseHelper.getAllUsers(loggedInUserId);
+  }
+
+  @override
+  Future<int> getCompletedTasksCount(int userId) async {
+    return await _databaseHelper.getCompletedTasksCount(userId);
+  }
+
+  @override
+  Future<int> getUncompletedTasksCount(int userId) async {
+    return await _databaseHelper.getUncompletedTasksCount(userId);
+  }
+
+  // @override
+  // Future<String> getTotalTaskHoursForCurrentDate(int userId) async {
+  //   return await _databaseHelper.getTotalTaskHoursForCurrentDate(userId);
+  // }
+
+  @override
+  Future<int> insertChatMessage(
+      int userId, int receiverId, String message) async {
+    return await _databaseHelper.insertChatMessage(userId, receiverId, message);
+  }
+
+  @override
+  Future<List<ChatMessage>> getChatMessagesByUserId(int userId,int receiverId) async {
+    return await _databaseHelper.getChatMessagesByUserId(userId,receiverId);
+  }
+
+  @override
+  Future<int> updateChatMessage(int id, String newMessage) async {
+    return await _databaseHelper.updateChatMessage(id, newMessage);
+  }
+
+  @override
+  Future<int> deleteChatMessage(int id) async {
+    return await _databaseHelper.deleteChatMessage(id);
   }
 }

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:animated_snack_bar/animated_snack_bar.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +28,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   bool _passObscured = true;
   bool _confirmPassObscured = true;
   final DatabaseHelper db = DatabaseHelper();
+  final _formKey = GlobalKey<FormState>();
   final EmailOTP myauth = EmailOTP();
 
   String encryptPassword(String password) {
@@ -48,65 +49,49 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   String? validateEmail(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email is required';
+      return AppLocalizations.of(context)!.emailIsRequired;
     } else if (!emailRegex.hasMatch(value)) {
-      return 'Enter a valid email address with @gmail.com or @kumaran.com';
+      return AppLocalizations.of(context)!.enterValidEmail;
     } else if (value.length > 60) {
-      return 'Email must not exceed 30 characters';
+      return AppLocalizations.of(context)!.emailMustNotExceed60Characters;
     }
     return null;
   }
 
   String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Password is required';
+      return AppLocalizations.of(context)!.passwordIsRequired;
     } else if (!passwordRegex.hasMatch(value)) {
-      return 'Password must contain at least 8 characters with one capital letter, one special symbol, and one number';
+      return AppLocalizations.of(context)!.passwordMustContain;
     } else if (value.length > 10) {
-      return 'Password must not exceed 10 characters';
+      return AppLocalizations.of(context)!.passwordMustNotExceed10Characters;
     }
     return null;
   }
 
   void signUp() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
     final String email = emailController.text;
     final String password = passController.text;
     final String confirmPassword = confirmPassController.text;
 
-    // Validate email
-    final emailError = validateEmail(email);
-    if (emailError != null) {
-      AnimatedSnackBar.material(
-        emailError,
-        type: AnimatedSnackBarType.error,
-      ).show(context);
-      return;
-    }
-
-    // Validate password
-    final passwordError = validatePassword(password);
-    if (passwordError != null) {
-      AnimatedSnackBar.material(
-        passwordError,
-        type: AnimatedSnackBarType.error,
-      ).show(context);
-      return;
-    }
-
     if (password != confirmPassword) {
-      AnimatedSnackBar.material(
-      AppLocalizations.of(context)!.passwordDoesNotMatch,
-        type: AnimatedSnackBarType.error,
-      ).show(context);
+      showAwesomeSnackBar(
+        AppLocalizations.of(context)!.passwordDoesNotMatch,
+        ContentType.failure,
+      );
       return;
     }
 
     final bool userExists = await db.checkUserExists(email);
     if (userExists && context.mounted) {
-      AnimatedSnackBar.material(
+      showAwesomeSnackBar(
         AppLocalizations.of(context)!.userAlreadyExists,
-        type: AnimatedSnackBarType.error,
-      ).show(context);
+        ContentType.failure,
+      );
       return;
     }
 
@@ -121,10 +106,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     try {
       final otpSent = await myauth.sendOTP();
       if (otpSent == true) {
-        AnimatedSnackBar.material(
+        showAwesomeSnackBar(
           AppLocalizations.of(context)!.otpHasBeenSent,
-          type: AnimatedSnackBarType.success,
-        ).show(context);
+          ContentType.success,
+        );
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -138,363 +123,334 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ),
         );
       } else {
-        AnimatedSnackBar.material(
+        showAwesomeSnackBar(
           AppLocalizations.of(context)!.failedToSendOTP,
-          type: AnimatedSnackBarType.error,
-        ).show(context);
+          ContentType.failure,
+        );
+        return;
       }
     } on SocketException {
-      AnimatedSnackBar.material(
+      showAwesomeSnackBar(
         AppLocalizations.of(context)!.noInternetConnection,
-        type: AnimatedSnackBarType.error,
-      ).show(context);
+        ContentType.failure,
+      );
+      return;
     } catch (e) {
-      AnimatedSnackBar.material(
+      showAwesomeSnackBar(
         'An unexpected error occurred: $e',
-        type: AnimatedSnackBarType.error,
-      ).show(context);
+        ContentType.failure,
+      );
+      return;
     }
   }
+
+  void showAwesomeSnackBar(String message, ContentType contentType) {
+    final snackBar = SnackBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      behavior: SnackBarBehavior.floating,
+      content: AwesomeSnackbarContent(
+        title: contentType == ContentType.failure ? 'error' : 'success',
+        message: message,
+        contentType: contentType,
+      ),
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // backgroundColor: Colors.amber.shade100,
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 0),
-              child: Lottie.asset(
-                "assets/lottie/signup.json",
-                width: 428,
-                height: 370,
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 0),
+                child: Lottie.asset(
+                  "assets/lottie/signup.json",
+                  width: 428,
+                  height: 370,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 50),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.signup,
-                    style: const TextStyle(
-                      color: Colors.purple,
-                      fontSize: 27,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: emailController,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return AppLocalizations.of(context)!.emailIsRequired;
-                      }
-                      return null;
-                    },
-                    style: const TextStyle(
-                      color: Color.fromARGB(255, 0, 0, 0),
-                      fontSize: 13,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.email,
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Icon(
-                          Icons.person_3,
-                          color: Colors.black,
-                        ),
-                      ),
-                      labelStyle: const TextStyle(
-                        color: Color.fromARGB(255, 0, 0, 0),
-                        fontSize: 15,
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 50),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.signup,
+                      style: const TextStyle(
+                        color: Colors.purple,
+                        fontSize: 27,
                         fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                      ),
-                      border: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
-                        ),
-                      ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
-                        ),
-                      ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
-                        ),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: passController,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return AppLocalizations.of(context)!.passwordIsRequired;
-                      }
-                      return null;
-                    },
-                    style: const TextStyle(
-                      color: Color.fromARGB(255, 0, 0, 0),
-                      fontSize: 13,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    obscureText: _passObscured,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.password,
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Icon(
-                          Icons.password_sharp,
-                          color: Colors.black,
-                        ),
-                      ),
-                      hintText: AppLocalizations.of(context)!.createPassword,
-                      hintStyle: const TextStyle(
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: emailController,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      validator: validateEmail,
+                      style: const TextStyle(
                         color: Color.fromARGB(255, 0, 0, 0),
-                        fontSize: 10,
+                        fontSize: 13,
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w400,
                       ),
-                      labelStyle: const TextStyle(
-                        color: Color.fromARGB(255, 0, 0, 0),
-                        fontSize: 15,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                      ),
-                      border: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.email,
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(
+                            Icons.person_3,
+                            color: Colors.black,
+                          ),
                         ),
-                      ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 15,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
                         ),
-                      ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
                         ),
-                      ),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _passObscured = !_passObscured;
-                          });
-                        },
-                        icon: Icon(
-                          _passObscured
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: Colors.grey,
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: confirmPassController,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                    validator: (value) {
-                      if (value!.isEmpty) {
-                        return AppLocalizations.of(context)!.passwordIsRequired;
-                      } else if (passController.text !=
-                          confirmPassController.text) {
-                        return AppLocalizations.of(context)!
-                            .passwordDoesNotMatch;
-                      }
-                      return null;
-                    },
-                    style: const TextStyle(
-                      color: Color.fromARGB(255, 0, 0, 0),
-                      fontSize: 13,
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.w400,
-                    ),
-                    obscureText: _confirmPassObscured,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)!.confirmPassword,
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Icon(
-                          Icons.password_sharp,
-                          color: Colors.black,
-                        ),
-                      ),
-                      hintText: AppLocalizations.of(context)!.confirmPassword,
-                      hintStyle: const TextStyle(
-                        color: Color.fromARGB(255, 0, 0, 0),
-                        fontSize: 10,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w400,
-                      ),
-                      labelStyle: const TextStyle(
-                        color: Color.fromARGB(255, 0, 0, 0),
-                        fontSize: 15,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w600,
-                      ),
-                      border: const OutlineInputBorder(
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
-                        ),
-                      ),
-                      enabledBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
-                        ),
-                      ),
-                      focusedBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                        borderSide: BorderSide(
-                          width: 1,
-                          color: Colors.purple,
-                        ),
-                      ),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() {
-                            _confirmPassObscured = !_confirmPassObscured;
-                          });
-                        },
-                        icon: Icon(
-                          _confirmPassObscured
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(10)),
-                    child: SizedBox(
-                      width: 329,
-                      height: 56,
-                      child: ElevatedButton(
-                        onPressed: signUp,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple,
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context)!.createAccount,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w500,
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Text(
-                        AppLocalizations.of(context)!.haveAccount,
-                        textAlign: TextAlign.start,
-                        style: const TextStyle(
-                          color: Colors.purple,
-                          fontSize: 18,
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: passController,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      validator: validatePassword,
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 0, 0, 0),
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      obscureText: _passObscured,
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.password,
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(
+                            Icons.password_sharp,
+                            color: Colors.black,
+                          ),
+                        ),
+                        hintText: AppLocalizations.of(context)!.createPassword,
+                        hintStyle: const TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 10,
                           fontFamily: 'Poppins',
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 15,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _passObscured = !_passObscured;
+                            });
+                          },
+                          icon: Icon(
+                            _passObscured
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 2.5),
-                      InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const LoginScreen()),
-                          );
-                        },
-                        child: Text(
-                          AppLocalizations.of(context)!.login,
-                          style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: confirmPassController,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return AppLocalizations.of(context)!
+                              .passwordIsRequired;
+                        } else if (passController.text !=
+                            confirmPassController.text) {
+                          return AppLocalizations.of(context)!
+                              .passwordDoesNotMatch;
+                        }
+                        return null;
+                      },
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 0, 0, 0),
+                        fontSize: 13,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w400,
+                      ),
+                      obscureText: _confirmPassObscured,
+                      decoration: InputDecoration(
+                        labelText:
+                            AppLocalizations.of(context)!.confirmPassword,
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(
+                            Icons.password_sharp,
+                            color: Colors.black,
+                          ),
+                        ),
+                        hintText: AppLocalizations.of(context)!.confirmPassword,
+                        hintStyle: const TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 10,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w400,
+                        ),
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 15,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w600,
+                        ),
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(10)),
+                          borderSide: BorderSide(
+                            width: 1,
+                            color: Colors.purple,
+                          ),
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _confirmPassObscured = !_confirmPassObscured;
+                            });
+                          },
+                          icon: Icon(
+                            _confirmPassObscured
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+                    ClipRRect(
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      child: SizedBox(
+                        width: 329,
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: signUp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple,
+                          ),
+                          child: Text(
+                            AppLocalizations.of(context)!.createAccount,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
                               fontFamily: 'Poppins',
                               fontWeight: FontWeight.w500,
-                              decoration: TextDecoration.underline),
+                            ),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  // Row(
-                  //   children: [
-                  //     const Text(
-                  //       'Verify OTP? ',
-                  //       textAlign: TextAlign.start,
-                  //       style: TextStyle(
-                  //         color: Colors.purple,
-                  //         fontSize: 15,
-                  //         fontFamily: 'Poppins',
-                  //         fontWeight: FontWeight.w500,
-                  //       ),
-                  //     ),
-                  //     const SizedBox(width: 2.5),
-                  //     InkWell(
-                  //       onTap: () {
-                  //         Navigator.push(
-                  //           context,
-                  //           MaterialPageRoute(
-                  //             builder: (context) => OtpScreen(
-                  //               email: emailController.text,
-                  //               password: passController.text,
-                  //               myauth: myauth,
-                  //               db: db,
-                  //               encryptPassword: encryptPassword,
-                  //             ),
-                  //           ),
-                  //         );
-                  //       },
-                  //       child: const Text(
-                  //         'Go',
-                  //         style: TextStyle(
-                  //             color: Colors.black,
-                  //             fontSize: 16,
-                  //             fontFamily: 'Poppins',
-                  //             fontWeight: FontWeight.w500,
-                  //             decoration: TextDecoration.underline),
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-                ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Text(
+                          AppLocalizations.of(context)!.haveAccount,
+                          textAlign: TextAlign.start,
+                          style: const TextStyle(
+                            color: Colors.purple,
+                            fontSize: 18,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 2.5),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginScreen()),
+                            );
+                          },
+                          child: Text(
+                            AppLocalizations.of(context)!.login,
+                            style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w500,
+                                decoration: TextDecoration.underline),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

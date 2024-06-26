@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:task_management/tasks/domain/models/task.dart';
@@ -36,6 +37,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
   Timer? _timer;
   int seconds = 0;
   bool isTimerRunning = false;
+  bool isHover = false;
 
   @override
   void initState() {
@@ -49,6 +51,20 @@ class _TaskTileState extends ConsumerState<TaskTile> {
   }
 
   void _completeTask() {
+    if (widget.task.taskHours == null || widget.task.taskHours == '0') {
+      Fluttertoast.showToast(
+        msg: 'add duration To complete Task',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+      _editTaskName(context);
+      return;
+    }
+
     if (seconds < 0) {
       Fluttertoast.showToast(
         msg: AppLocalizations.of(context)!.work_15_minutes,
@@ -98,6 +114,9 @@ class _TaskTileState extends ConsumerState<TaskTile> {
     );
     ref.read(completedTasksprovider.notifier).unCompletedTask(widget.task);
     ref.read(taskProvider.notifier).uncompleteTaskByName(widget.task.taskName);
+    // ref
+    //     .read(completedTasksprovider.notifier)
+    //     .deleteCompletedTask(widget.completedTask!.id);
     setState(() {
       widget.task.isCompleted = false;
     });
@@ -109,9 +128,12 @@ class _TaskTileState extends ConsumerState<TaskTile> {
     if (totalMinutes >= 60) {
       int hours = totalMinutes ~/ 60;
       int minutes = totalMinutes % 60;
-      return '$hours H $minutes M';
+      if (minutes == 0) {
+        return '$hours hr';
+      }
+      return '$hours hr $minutes m';
     } else {
-      return '$totalMinutes M';
+      return '$totalMinutes m';
     }
   }
 
@@ -119,7 +141,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
   Widget build(BuildContext context) {
     String displayTime = widget.task.taskHours != null
         ? _getDisplayTime(widget.task.taskHours!)
-        : '0 M';
+        : '0 m';
 
     String firstLetter = widget.task.taskName.isNotEmpty
         ? widget.task.taskName.substring(0, 1).toUpperCase()
@@ -138,176 +160,251 @@ class _TaskTileState extends ConsumerState<TaskTile> {
       decoration: widget.task.isCompleted ? TextDecoration.lineThrough : null,
     );
 
+    // if (!widget.task.isAccepted) {
+    //   return const SizedBox.shrink();
+    // }
+
     return LongPressDraggable(
       feedback: Container(),
       childWhenDragging: Container(),
       data: widget.task,
-      onDragStarted: () {
-        if (!widget.task.isCompleted) {
-          _showDeleteConfirmationDialog();
-        }
-      },
+      // onDragStarted: () {
+      //   if (!widget.task.isCompleted) {
+      //     _showDeleteConfirmationDialog();
+      //   }
+      // },
       child: GestureDetector(
         onTap: () {
           if (!widget.task.isCompleted) {
             _editTaskName(context);
           }
         },
-        child: Container(
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            gradient: widget.task.isCompleted
-                ? const LinearGradient(
-                    colors: [
-                      Color.fromARGB(255, 160, 88, 223),
-                      Color.fromARGB(255, 255, 255, 255)
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            color: widget.task.isCompleted ? null : Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: widget.task.isCompleted ? Colors.transparent : Colors.grey,
-              width: 1,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.basic,
+          // onEnter: (event) {
+          //   setState(() {
+          //     isHover = true;
+          //   });
+          // },
+          // onHover: (event) => {
+          //   setState(() {
+          //     isHover = true;
+          //   })
+          // },
+          // onExit: (event) {
+          //   setState(() {
+          //     isHover = false;
+          //   });
+          // },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            transform: isHover
+                ? Matrix4.diagonal3Values(1.1, 1.1, 1)
+                : Matrix4.identity(),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: widget.task.isCompleted
+                  ? const LinearGradient(
+                      colors: [
+                        Color.fromARGB(255, 160, 88, 223),
+                        Color.fromARGB(255, 255, 255, 255)
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: widget.task.isCompleted ? null : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color:
+                    widget.task.isCompleted ? Colors.transparent : Colors.grey,
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 2,
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.purple, Color.fromARGB(255, 99, 68, 182)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Center(
-                  child: Text(
-                    firstLetter,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.white,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Colors.purple, Color.fromARGB(255, 99, 68, 182)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      taskFirstLetter,
-                      style: textStyle,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  displayTime,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: () {
-                  if (!widget.task.isCompleted) {
-                    ref
-                        .read(taskProvider.notifier)
-                        .completeTaskByName(widget.task.taskName);
-                    _completeTask();
-                  }
-                },
-                child: Tooltip(
-                  message: 'Complete task',
-                  preferBelow: true,
-                  child: Icon(
-                    widget.task.isCompleted
-                        ? Icons.done_all
-                        : Icons.done_outline,
-                    color: widget.task.isCompleted
-                        ? Colors.green
-                        : Colors.blueGrey,
-                    size: 30,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              PopupMenuButton(
-                itemBuilder: (context) => [
-                  PopupMenuItem(
+                  child: Center(
                     child: Text(
-                      AppLocalizations.of(context)!.note,
+                      firstLetter,
                       style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.normal,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.white,
                       ),
-                    ),
-                    onTap: () {
-                      if (!widget.task.isCompleted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CommentsDialog(
-                              task: widget.task,
-                            ),
-                          ),
-                        );
-                      }
-                    },
+                    ).animate().fade(duration: 900.ms).slideX(),
                   ),
-                  if (widget.task.isCompleted)
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        taskFirstLetter,
+                        style: textStyle,
+                      ).animate().fade(duration: 900.ms).slideX(),
+                      // const Text(
+                      //   'Details here',
+                      //   style: TextStyle(
+                      //     fontFamily: 'Poppins',
+                      //     fontSize: 14,
+                      //     color: Colors.grey,
+                      //   ),
+                      // ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  width: 110,
+                  height: 40,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00B4DB), Color(0xFF0083B0)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: const [],
+                  ),
+                  child: Center(
+                    child: Text(
+                      displayTime,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ).animate().fade(duration: 900.ms).slideX(),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () {
+                    if (!widget.task.isCompleted) {
+                      ref
+                          .read(taskProvider.notifier)
+                          .completeTaskByName(widget.task.taskName);
+                      _completeTask();
+                    }
+                  },
+                  child: Tooltip(
+                    message: 'Complete task',
+                    preferBelow: true,
+                    child: Icon(
+                      widget.task.isCompleted
+                          ? Icons.done_all
+                          : Icons.done_outline,
+                      color: widget.task.isCompleted
+                          ? Colors.green
+                          : Colors.blueGrey,
+                      size: 30,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                PopupMenuButton(
+                  color: Colors.black,
+                  itemBuilder: (context) => [
                     PopupMenuItem(
-                      child: Text(
-                        AppLocalizations.of(context)!.uncomplete,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontFamily: 'Poppins',
-                          fontWeight: FontWeight.normal,
-                        ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.note_add, color: Colors.white),
+                          const SizedBox(width: 10),
+                          Text(
+                            AppLocalizations.of(context)!.note,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ).animate().fade(duration: 500.ms).slideY(),
+                        ],
                       ),
                       onTap: () {
-                        _uncompleteTask();
+                        if (!widget.task.isCompleted) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CommentsDialog(
+                                task: widget.task,
+                              ),
+                            ),
+                          );
+                        }
                       },
                     ),
-                ],
-                child: const Icon(Icons.more_vert_rounded),
-              ),
-            ],
+                    if (widget.task.isCompleted)
+                      PopupMenuItem(
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.white),
+                            const SizedBox(width: 10),
+                            Text(
+                              AppLocalizations.of(context)!.uncomplete,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.normal,
+                              ),
+                            ).animate().fade(duration: 500.ms).slideY(),
+                          ],
+                        ),
+                        onTap: () {
+                          _uncompleteTask();
+                        },
+                      ),
+                    PopupMenuItem(
+                      child: Row(
+                        children: [
+                          const Icon(Icons.delete_outline_outlined,
+                              color: Colors.white),
+                          const SizedBox(width: 10),
+                          Text(
+                            AppLocalizations.of(context)!.deleteTask,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontFamily: 'Poppins',
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ).animate().fade(duration: 500.ms).slideY(),
+                        ],
+                      ),
+                      onTap: () {
+                        _showDeleteConfirmationDialog();
+                      },
+                    ),
+                  ],
+                  child: const Icon(Icons.more_vert_rounded),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -597,7 +694,7 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                   color: Colors.white,
                   fontSize: 16,
                 ),
-              ),
+              ).animate().fade().slideX(),
             ),
           ],
         );

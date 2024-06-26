@@ -66,4 +66,26 @@ class NotificationManager {
       platformChannelSpecifics,
     );
   }
+
+  // static Future<void> showUserNotification({
+  //   required String fileName,
+  //   required String message,
+  //   required WidgetRef ref,
+  // }) async {
+  //   const AndroidNotificationDetails androidPlatformChannelSpecifics =
+  //       AndroidNotificationDetails('your_channel_id', 'Your channel name',
+  //           importance: Importance.high, priority: Priority.high, number: 1);
+  //   const NotificationDetails platformChannelSpecifics =
+  //       NotificationDetails(android: androidPlatformChannelSpecifics);
+  //   await flutterLocalNotificationsPlugin.show(
+  //     1,
+  //     'Notification',
+  //     '$message, $fileName',
+  //     platformChannelSpecifics,
+  //   );
+  //   print(
+  //       'Notification created: $message, $fileName'); // Print statement for verification
+  //   final notifier = ref.read(notificationProvider.notifier);
+  //   notifier.addNotification('$message, $fileName');
+  // }
 }

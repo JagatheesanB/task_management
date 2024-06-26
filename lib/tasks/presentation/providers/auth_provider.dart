@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:task_management/tasks/domain/repositories/task_repository.dart';
 import 'package:task_management/tasks/presentation/providers/task_provider.dart';
 
+import '../../domain/models/users.dart';
+
 class UserNotifier extends StateNotifier<int?> {
   final TaskRepository _taskRepository;
 
@@ -40,6 +42,11 @@ class AuthNotifier extends StateNotifier<bool> {
     await _repository.signup(userName, userPassword);
     state = true;
     // print('Signup Status: $state');
+  }
+
+  Future<List<Users>> loadUsers(int userId) async {
+    final users = await _repository.getAllUsers(userId);
+    return users;
   }
 }
 

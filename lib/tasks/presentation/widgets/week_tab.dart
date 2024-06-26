@@ -51,7 +51,7 @@ class WeekPageState extends ConsumerState<WeekPage>
     _selectedDate = widget.selectedDate;
 
     final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday-1));
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
 
     dateRange = DateTimeRange(start: startOfWeek, end: endOfWeek);
@@ -424,14 +424,16 @@ class WeekPageState extends ConsumerState<WeekPage>
 
   Widget _buildNoTasksWidget() {
     return Center(
-      child: Text(
-        AppLocalizations.of(context)!.noTaskAvailable,
-        style: const TextStyle(
-            fontSize: 20,
-            fontFamily: 'Poppins',
-            fontStyle: FontStyle.italic,
-            fontWeight: FontWeight.normal,
-            color: Colors.black),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.calendar_today, size: 48, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            AppLocalizations.of(context)!.noTaskAvailable,
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }

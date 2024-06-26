@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:task_management/tasks/domain/models/attendance.dart';
@@ -6,8 +7,10 @@ import 'package:task_management/tasks/domain/models/completed.dart';
 import 'package:task_management/tasks/domain/models/task.dart';
 import 'package:task_management/tasks/utils/constants/exception.dart';
 
+import '../../domain/models/chat.dart';
 import '../../domain/models/comment.dart';
 import '../../domain/models/history.dart';
+import '../../domain/models/users.dart';
 
 class DatabaseHelper {
   final String databaseName = "datasource.db";
@@ -15,10 +18,13 @@ class DatabaseHelper {
       "CREATE TABLE users (userId INTEGER PRIMARY KEY AUTOINCREMENT, userName TEXT UNIQUE, userPassword TEXT)";
 
   final String taskTable =
-      "CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT,userId INTEGER,taskName TEXT, isCompleted INTEGER, dateTime TEXT, interval TEXT, workingHours TEXT, taskHours TEXT, createdAt TEXT)";
+      "CREATE TABLE tasks (id INTEGER PRIMARY KEY AUTOINCREMENT,userId INTEGER,taskName TEXT, isCompleted INTEGER, dateTime TEXT, interval TEXT, workingHours TEXT, taskHours TEXT, createdAt TEXT, assignedTo INTEGER, sharedWith TEXT, isAccepted INTEGER)";
 
   final String completedTasksTable =
       "CREATE TABLE completed_tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, taskName TEXT,userId INTEGER, seconds INTEGER, dateTime TEXT)";
+
+  final String chatTable =
+      "CREATE TABLE chat_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, receiverId INTEGER, message TEXT, timestamp TEXT, FOREIGN KEY (userId) REFERENCES users(userId))";
 
   static Database? _database; // holds the reference to the database
   static DatabaseHelper?
@@ -47,6 +53,7 @@ class DatabaseHelper {
     await db.execute(usersTable);
     await db.execute(taskTable);
     await db.execute(completedTasksTable);
+    await db.execute(chatTable);
     await createHistoryTable(db);
     await createAttendanceTable(db);
     await createCommentTable(db);
@@ -110,6 +117,18 @@ class DatabaseHelper {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<List<Users>> getAllUsers(int loggedInUserId) async {
+    final Database db = await database;
+    final List<Map<String, dynamic>> maps = await db
+        .query('users', where: 'userId != ?', whereArgs: [loggedInUserId]);
+    return List.generate(maps.length, (i) {
+      return Users(
+        userId: maps[i]['userId'],
+        userName: maps[i]['userName'],
+      );
+    });
   }
 
   // Future<String?> getUserEmailByBiometricId(String biometricId) async {
@@ -282,33 +301,45 @@ class DatabaseHelper {
     // Fetch all tasks for the user, both completed and not completed
     final List<Map<String, dynamic>> maps = await db.query(
       'tasks',
-      where: 'userId = ?',
-      whereArgs: [userId],
+      where: 'userId = ? OR assignedTo = ?',
+      whereArgs: [userId, userId],
     );
     print('Maps : $maps');
     List<Tasks> tasks = [];
     for (var map in maps) {
-      Tasks task = Tasks(
-        id: map['id'],
-        taskName: map['taskName'],
-        isCompleted: map['isCompleted'] == 1,
-        dateTime: DateTime.parse(map['dateTime']),
-        interval: map['interval'],
-        taskHours: map['taskHours'],
-        createdAt: map['createdAt'] != null
-            ? DateTime.parse(map['createdAt'])
-            : DateTime.now(),
-      );
+      List<int> sharedWithList = [];
+      if (map['sharedWith'] != null && map['sharedWith'] is String) {
+        List<String> sharedWithStrings = map['sharedWith'].split(',');
+        sharedWithList = sharedWithStrings
+            .map((str) => int.tryParse(str.trim()) ?? 0)
+            .toList();
+      } else if (map['sharedWith'] is List) {
+        sharedWithList = List<int>.from(map['sharedWith']);
+      }
 
+      Tasks task = Tasks(
+          id: map['id'],
+          taskName: map['taskName'],
+          isCompleted: map['isCompleted'] == 1,
+          dateTime: DateTime.parse(map['dateTime']),
+          interval: map['interval'],
+          taskHours: map['taskHours'],
+          createdAt: map['createdAt'] != null
+              ? DateTime.parse(map['createdAt'])
+              : DateTime.now(),
+          assignedTo: map['assignedTo'],
+          sharedWith: sharedWithList,
+          isAccepted: false);
       task = updateTaskDateIfNeeded(task);
 
       tasks.add(task);
     }
-    // tasks = tasks
-    //     .where((task) => task.user?.userId == userId && !task.isCompleted)
-    //     .toList();
     return tasks;
   }
+
+  // tasks = tasks
+  //     .where((task) => task.user?.userId == userId && !task.isCompleted)
+  //     .toList();
 
   Tasks updateTaskDateIfNeeded(Tasks task) {
     if (!task.isCompleted && task.dateTime!.isBefore(DateTime.now())) {
@@ -774,5 +805,190 @@ class DatabaseHelper {
         // createdAt: DateTime.parse(maps[i]['createdAt']),
       );
     });
+  }
+
+  // Method to get total task hours for the current date
+  Future<String> getTotalTaskHoursForCurrentDate(
+      int userId, DateTime currentDate) async {
+    final Database db = await database;
+    String currentDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT SUM(taskHours) AS totalTaskHours 
+      FROM tasks 
+      WHERE userId = ? AND date(dateTime) = ?
+    ''', [userId, currentDate]);
+
+    String totalHours = result[0]['totalTaskHours'].toString();
+
+    return totalHours;
+  }
+
+  Future<int> getCompletedTasksCount(int userId) async {
+    final Database db = await database;
+
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
+    SELECT COUNT(*) AS count 
+    FROM tasks 
+    WHERE userId = ? AND isCompleted = 1
+  ''', [userId]);
+
+    int count = Sqflite.firstIntValue(result) ?? 0;
+    return count;
+  }
+
+  Future<int> getUncompletedTasksCount(int userId) async {
+    final Database db = await database;
+
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
+    SELECT COUNT(*) AS count 
+    FROM tasks 
+    WHERE userId = ? AND isCompleted = 0
+  ''', [userId]);
+
+    int count = Sqflite.firstIntValue(result) ?? 0;
+    return count;
+  }
+
+  // Create chat message
+  Future<int> insertChatMessage(
+      int userId, int receiverId, String message) async {
+    final Database db = await database;
+    final DateTime now = DateTime.now();
+    try {
+      int id = await db.insert(
+        'chat_messages',
+        {
+          'userId': userId,
+          'receiverId': receiverId,
+          'message': message,
+          'timestamp': now.toIso8601String(),
+        },
+      );
+      print('DB ----- $userId -- $receiverId');
+      return id;
+    } catch (e) {
+      print('Error inserting chat message: $e');
+      throw Exception("Failed to insert chat message.");
+    }
+  }
+
+  // Get chat messages by user ID
+  // Future<List<ChatMessage>> getChatMessagesByUserId(int userId) async {
+  //   try {
+  //     final Database db = await database;
+
+  //     final List<Map<String, dynamic>> senderMaps = await db.query(
+  //       'chat_messages',
+  //       where: 'userId = ?',
+  //       whereArgs: [userId],
+  //     );
+  //     print('senderMaps --------- $senderMaps');
+  //     final List<Map<String, dynamic>> receiverMaps = await db.query(
+  //       'chat_messages',
+  //       where: 'receiverId = ?',
+  //       whereArgs: [userId],
+  //     );
+  //     print('receiverMaps --------- $receiverMaps');
+
+  //     List<ChatMessage> messages = [];
+
+  //     // Add sender messages
+  //     if (senderMaps.isNotEmpty) {
+  //       messages.addAll(senderMaps.map((map) => ChatMessage.fromMap(map)));
+  //     }
+
+  //     // Add receiver messages, ensuring no duplicates
+  //     for (var map in receiverMaps) {
+  //       if (!messages.any((msg) => msg.id == map['id'])) {
+  //         messages.add(ChatMessage.fromMap(map));
+  //       }
+  //     }
+
+  //     return messages;
+  //   } catch (e) {
+  //     print('Error fetching chat messages: $e');
+  //     throw CustomException('Failed to fetch chat messages: $e');
+  //   }
+  // }
+
+  Future<List<ChatMessage>> getChatMessagesByUserId(
+      int userId, int receiverId) async {
+    try {
+      final Database db = await database;
+
+      // Fetch messages where userId is the sender
+      final List<Map<String, dynamic>> senderMaps = await db.query(
+        'chat_messages',
+        where: 'userId = ? AND receiverId = ?',
+        whereArgs: [userId, receiverId],
+      );
+      print('senderMaps --------- $senderMaps');
+
+      // Fetch messages where userId is the receiver
+      final List<Map<String, dynamic>> receiverMaps = await db.query(
+        'chat_messages',
+        where: 'userId = ? AND receiverId = ?',
+        whereArgs: [receiverId, userId],
+      );
+      print('receiverMaps --------- $receiverMaps');
+
+      List<ChatMessage> messages = [];
+
+      // Add sender messages
+      if (senderMaps.isNotEmpty) {
+        messages.addAll(senderMaps.map((map) => ChatMessage.fromMap(map)));
+      }
+
+      // Add receiver messages, ensuring no duplicates
+      for (var map in receiverMaps) {
+        if (!messages.any((msg) => msg.id == map['id'])) {
+          messages.add(ChatMessage.fromMap(map));
+        }
+      }
+
+      return messages;
+    } catch (e) {
+      print('Error fetching chat messages: $e');
+      throw CustomException('Failed to fetch chat messages: $e');
+    }
+  }
+
+  // Update chat message
+  Future<int> updateChatMessage(int id, String newMessage) async {
+    final Database db = await database;
+    final DateTime now = DateTime.now();
+    try {
+      int count = await db.update(
+        'chat_messages',
+        {
+          'message': newMessage,
+          'timestamp': now.toIso8601String(),
+        },
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      print('UPDATED MESSAGE ----- $newMessage');
+      return count;
+    } catch (e) {
+      print('Error updating chat message: $e');
+      throw Exception("Failed to update chat message.");
+    }
+  }
+
+  // Delete chat message
+  Future<int> deleteChatMessage(int id) async {
+    final Database db = await database;
+    try {
+      int count = await db.delete(
+        'chat_messages',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+      return count;
+    } catch (e) {
+      print('Error deleting chat message: $e');
+      throw Exception("Failed to delete chat message.");
+    }
   }
 }

@@ -162,6 +162,25 @@ class TaskNotifier extends StateNotifier<List<Tasks>> {
   //   }
   //   await getTasksWithUserId(userId);
   // }
+
+  // Fetch and update completed tasks count
+  // Future<void> getCompletedTasksCount(int userId) async {
+  //   try {
+  //     await _taskRepository.getCompletedTasksCount(userId);
+  //     state = [...state];
+  //   } catch (e) {
+  //     throw CustomException('Failed to fetch completed tasks count: $e');
+  //   }
+  // }
+  //  Fetch and update uncompleted tasks count
+  // Future<void> getUncompletedTasksCount(int userId) async {
+  //   try {
+  //     await _taskRepository.getUncompletedTasksCount(userId);
+  //     state = [...state];
+  //   } catch (e) {
+  //     throw CustomException('Failed to fetch uncompleted tasks count: $e');
+  //   }
+  // }
 }
 
 final taskProvider = StateNotifierProvider<TaskNotifier, List<Tasks>>(

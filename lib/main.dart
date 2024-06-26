@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+// import 'package:task_management/tasks/presentation/views/ProfileScreen.dart';
+import 'package:task_management/tasks/presentation/views/welcome_page.dart';
 // import 'package:path/path.dart';
 // import 'package:sqflite/sqflite.dart';
-import 'package:task_management/tasks/presentation/views/login_page.dart';
 import 'package:task_management/tasks/utils/notifications.dart';
 import 'tasks/presentation/providers/language_provider.dart';
 // import 'tasks/presentation/views/bio_metric.dart';
@@ -31,10 +32,9 @@ class MyApp extends ConsumerWidget {
       locale: ref.watch(selectedLocaleProvider),
       supportedLocales: AppLocalizations.supportedLocales,
       title: 'TIMESHEET',
-      // theme: ThemeData.light(),
+      theme: ThemeData(fontFamily: 'poppins'),
       // darkTheme: ThemeData.dark(),
-      home: const LoginScreen(),
-      // home: const BioMetric(),
+      home: const WelcomeScreen(),
     );
   }
 }

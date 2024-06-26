@@ -262,7 +262,7 @@ class _CompletedTasksPageState extends ConsumerState<CompletedTasksPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.file_download),
+                    // const Icon(Icons.file_download),
                     const SizedBox(width: 8),
                     Text(
                       AppLocalizations.of(context)!.getExcel,

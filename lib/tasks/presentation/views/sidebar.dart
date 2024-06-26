@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:task_management/tasks/domain/models/completed.dart';
 import 'package:task_management/tasks/presentation/views/attendance.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:task_management/tasks/presentation/views/profile_screen.dart';
+import 'package:task_management/tasks/presentation/views/user_instruction.dart';
 import '../providers/language_provider.dart';
 
 class Sidebar extends ConsumerStatefulWidget {
@@ -23,6 +25,7 @@ class Sidebar extends ConsumerStatefulWidget {
 
 class _SidebarState extends ConsumerState<Sidebar> {
   late Locale _locale;
+
   @override
   void initState() {
     super.initState();
@@ -45,147 +48,227 @@ class _SidebarState extends ConsumerState<Sidebar> {
 
     return Drawer(
       backgroundColor: Colors.white,
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          GestureDetector(
-            child: DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.purple,
-                // gradient: LinearGradient(colors: [
-                //   Color.fromARGB(255, 160, 88, 223),
-                //   Color.fromARGB(255, 255, 255, 255)
-                // ], begin: Alignment.topLeft, end: Alignment.bottomRight)
-              ),
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Row(
+          Column(
+            children: <Widget>[
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => ProfileScreen(
+                              email: widget.email,
+                            )),
+                  );
+                },
+                child: DrawerHeader(
+                  decoration: const BoxDecoration(
+                      // color: Colors.purple,
+                      ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              AppLocalizations.of(context)!
-                                  .welcome
-                                  .toUpperCase(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontFamily: 'Poppins',
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)!
+                                      .welcome
+                                      .toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 13,
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  emailPrefix,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontFamily: 'Poppins',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
+                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             Text(
-                              emailPrefix,
+                              widget.email,
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
+                                color: Colors.black,
+                                fontSize: 19,
                                 fontFamily: 'Poppins',
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.normal,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.email,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 19,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  PopupMenuButton<Locale>(
-                    icon: CircleAvatar(
-                      backgroundColor: Colors.transparent,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 1.0,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            _locale.languageCode.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                      ),
+                      // Language Selection PopupMenuButton
+                      PopupMenuButton<Locale>(
+                        icon: CircleAvatar(
+                          backgroundColor: Colors.transparent,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.black,
+                                width: 1.0,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                _locale.languageCode.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
                           ),
                         ),
+                        itemBuilder: (BuildContext context) {
+                          return languages;
+                        },
+                        onSelected: (value) {
+                          setState(() {
+                            _locale = value;
+                          });
+                          ref
+                              .read(selectedLocaleProvider.notifier)
+                              .changeLocale(value);
+                          _showLanguageToast(value);
+                        },
                       ),
-                    ),
-                    itemBuilder: (BuildContext context) {
-                      return languages;
-                    },
-                    onSelected: (value) {
-                      setState(() {
-                        _locale = value;
-                      });
-                      ref
-                          .read(selectedLocaleProvider.notifier)
-                          .changeLocale(value);
-                    },
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.access_time_outlined,
-              color: Colors.black,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.attendance,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.purple,
-              ),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AttendanceLocationScreen(),
                 ),
-              );
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(
-              Icons.exit_to_app_outlined,
-              color: Colors.black,
-            ),
-            title: Text(
-              AppLocalizations.of(context)!.logout,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.purple,
               ),
+              ListTile(
+                leading: const Icon(
+                  Icons.access_time_outlined,
+                  color: Colors.black,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!.attendance,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.purple,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AttendanceLocationScreen(),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.task_outlined,
+                  color: Colors.black,
+                ),
+                title: const Text(
+                  'Instructions',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.purple,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const UserInstructionsPage()));
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(
+                  Icons.exit_to_app_outlined,
+                  color: Colors.black,
+                ),
+                title: Text(
+                  AppLocalizations.of(context)!.logout,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.purple,
+                  ),
+                ),
+                onTap: () {
+                  widget.onLogout();
+                },
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: PopupMenuButton<void>(
+              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 70),
+              icon: CircleAvatar(
+                backgroundColor: Colors.transparent,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.chevron_left,
+                    color: Colors.black,
+                    size: 40,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              itemBuilder: (BuildContext context) {
+                return [];
+              },
             ),
-            onTap: () {
-              widget.onLogout();
-            },
           ),
         ],
       ),
+    );
+  }
+
+  void _showLanguageToast(Locale selectedLocale) {
+    String languageName = '';
+    switch (selectedLocale.languageCode) {
+      case 'en':
+        languageName = 'English';
+        break;
+      case 'hi':
+        languageName = 'Hindi';
+        break;
+      case 'fr':
+        languageName = 'French';
+        break;
+      case 'zh':
+        languageName = 'Chinese';
+        break;
+      default:
+        languageName = 'Unknown';
+    }
+    Fluttertoast.showToast(
+      msg: 'You selected $languageName',
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.TOP_RIGHT,
+      backgroundColor: Colors.purple,
+      textColor: Colors.white,
     );
   }
 
@@ -232,5 +315,88 @@ class _SidebarState extends ConsumerState<Sidebar> {
         ),
       ),
     ];
+  }
+}
+
+class CustomPopupMenu extends StatefulWidget {
+  final Widget icon;
+  final List<PopupMenuEntry> menuItems;
+  final Function onPressed;
+
+  const CustomPopupMenu({
+    Key? key,
+    required this.icon,
+    required this.menuItems,
+    required this.onPressed,
+  }) : super(key: key);
+
+  @override
+  _CustomPopupMenuState createState() => _CustomPopupMenuState();
+}
+
+class _CustomPopupMenuState extends State<CustomPopupMenu>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _offsetAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _offsetAnimation = Tween<Offset>(
+      begin: const Offset(1.5, 0.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  void _toggleMenu() {
+    if (_controller.isDismissed) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        IconButton(
+          icon: widget.icon,
+          onPressed: () {
+            widget.onPressed();
+            _toggleMenu();
+          },
+        ),
+        Positioned(
+          right: 0,
+          bottom: 50,
+          child: SlideTransition(
+            position: _offsetAnimation,
+            child: Material(
+              elevation: 8.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Column(
+                children: widget.menuItems,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

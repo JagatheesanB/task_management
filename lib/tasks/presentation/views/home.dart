@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
@@ -18,14 +19,14 @@ import '../../domain/models/completed.dart';
 import '../../domain/models/history.dart';
 import '../providers/auth_provider.dart';
 import '../providers/history_provider.dart';
+import 'chat_screen.dart';
 
 class Home extends ConsumerStatefulWidget {
+  final String? email;
   const Home({
     Key? key,
     required this.email,
   }) : super(key: key);
-  final String? email;
-
   @override
   ConsumerState createState() => HomeState();
 }
@@ -44,6 +45,7 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
   List<Tasks> weekTasks = [];
   // late Tasks tasks;
   bool isSearching = false;
+  int? userId;
 
   @override
   void initState() {
@@ -52,6 +54,7 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
     final userId = ref.read(currentUserProvider);
     if (userId != null) {
       loadData(userId);
+      this.userId = userId;
     }
     _filterTasks();
   }
@@ -132,10 +135,6 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
     ref.read(taskProvider.notifier).getTasksWithUserId(userId);
   }
 
-  // loadTodayTasks(int userId) {
-  //   ref.read(taskProvider.notifier).getTodayTasks(userId);
-  // }
-
   void logout() {
     Navigator.pushAndRemoveUntil(
       context,
@@ -169,7 +168,14 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
                 const SizedBox(
                   height: 10,
                 ),
-                _week(),
+                Row(
+                  children: [
+                    const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 47)),
+                    _week(),
+                    _chatIcon(),
+                  ],
+                ),
                 const SizedBox(
                   height: 10,
                 ),
@@ -214,6 +220,23 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
             ),
           ],
         ),
+        // bottomNavigationBar: BottomNavigationBar(
+        //   items: const [
+        //     BottomNavigationBarItem(
+        //       icon: Icon(Icons.home),
+        //       label: 'Home',
+        //     ),
+        //     BottomNavigationBarItem(
+        //       icon: Icon(Icons.person),
+        //       label: 'Users',
+        //     ),
+        //   ],
+        //   onTap: (index) {
+        //     if (index == 1) {
+        //       _showUserListModal();
+        //     }
+        //   },
+        // ),
       ),
     );
   }
@@ -274,7 +297,7 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),
-          ),
+          ).animate().fade().slideY(),
           const Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 15),
@@ -283,9 +306,15 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
           ),
           Tooltip(
             message: 'Report',
-            child: IconButton(
+            child: TextButton(
               onPressed: _navigateToReportsPage,
-              icon: const Icon(Icons.report_outlined, color: Colors.black),
+              child: const Text(
+                'REPORT',
+                style: TextStyle(
+                    fontFamily: 'poppins',
+                    fontWeight: FontWeight.normal,
+                    color: Colors.black),
+              ).animate().fade().slideY(),
             ),
           ),
           // IconButton(
@@ -294,13 +323,25 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
           // ),
           Tooltip(
             message: 'History',
-            child: IconButton(
+            child: TextButton(
               onPressed: _navigateToTaskHistoryPage,
-              icon: const Icon(Icons.history, color: Colors.black),
+              child: const Text(
+                'HISTORY',
+                style: TextStyle(
+                    fontFamily: 'poppins',
+                    fontWeight: FontWeight.normal,
+                    color: Colors.black),
+              ).animate().fade().slideY(),
             ),
           ),
         ],
       ),
+      // actions: [
+      //   IconButton(
+      //     icon: const Icon(Icons.person),
+      //     onPressed: _showUserListModal,
+      //   ),
+      // ],
       bottom: isSearchVisible ? _buildSearchBar() : null,
     );
   }
@@ -343,6 +384,98 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
           ),
         ),
       ),
+    );
+  }
+
+  void _showUserListModal() async {
+    final userId = ref.read(currentUserProvider) as int;
+    final users =
+        await ref.read(authNotifierProvider.notifier).loadUsers(userId);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return FractionallySizedBox(
+          heightFactor: 0.6,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+              border: Border.all(color: Colors.black, width: 5.0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'User List',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    itemCount: users.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        elevation: 5,
+                        margin: const EdgeInsets.symmetric(vertical: 6),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(15.0),
+                          title: Text(
+                            users[index].userName!,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          // subtitle: Text(
+                          //   'ID: ${users[index].userId}',
+                          //   style: const TextStyle(
+                          //     color: Colors.black54,
+                          //   ),
+                          // ),
+                          trailing:
+                              Icon(Icons.send, color: Colors.purple.shade600),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    Consumer(builder: (context, ref, _) {
+                                  return ChatScreen(
+                                    userId: userId,
+                                    userName: users[index].userName!,
+                                    receiverId: users[index].userId!,
+                                  );
+                                }),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -392,10 +525,24 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
+                const SizedBox(width: 10),
               ],
             ),
           ),
+          // Padding(padding: EdgeInsets.symmetric(horizontal: 30,vertical: 0)),
+          // _chatIcon(),
         ],
+      ),
+    );
+  }
+
+  Widget _chatIcon() {
+    return Visibility(
+      visible: selectedInterval == 'DAY',
+      child: IconButton(
+        padding: const EdgeInsets.symmetric(horizontal: 45),
+        icon: const Icon(Icons.chat),
+        onPressed: _showUserListModal,
       ),
     );
   }

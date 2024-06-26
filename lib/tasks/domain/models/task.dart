@@ -12,7 +12,9 @@ class Tasks {
   final Users? user;
   String? taskHours;
   DateTime createdAt;
+  int? assignedTo;
   List<int>? sharedWith;
+  bool isAccepted;
 
   Tasks(
       {this.id,
@@ -23,7 +25,9 @@ class Tasks {
       this.user,
       this.taskHours,
       required this.createdAt,
-      this.sharedWith}) {
+      this.assignedTo,
+      this.sharedWith,
+      this.isAccepted = false}) {
     // if (id == 0) {
     //   _idCounter++;
     //   id = _idCounter;
@@ -41,8 +45,10 @@ class Tasks {
       user: map['user'],
       taskHours: map['taskHours'],
       createdAt: DateTime.parse(map['createdAt']),
+      assignedTo: map['assignedTo'] ?? 0,
       sharedWith:
           map['sharedWith'] != null ? List<int>.from(map['sharedWith']) : null,
+      isAccepted: map['isAccepted'] ?? false,
     );
   }
 
@@ -56,7 +62,9 @@ class Tasks {
       // 'user': user?.userId,
       // 'taskHours': taskHours,
       'createdAt': createdAt.toIso8601String(),
-      'sharedWith': sharedWith,
+      'assignedTo': assignedTo,
+      'sharedWith': sharedWith != null ? jsonEncode(sharedWith) : null,
+      'isAccepted': isAccepted ? 1 : 0,
     };
   }
 
@@ -67,8 +75,10 @@ class Tasks {
       'isCompleted': isCompleted ? 1 : 0,
       'dateTime': dateTime?.toString(),
       'interval': interval,
-      'taskHours': '1',
-      'sharedWith': sharedWith,
+      'taskHours': '0',
+      'assignedTo': assignedTo,
+      'sharedWith': sharedWith != null ? jsonEncode(sharedWith) : null,
+      'isAccepted': isAccepted ? 1 : 0,
     };
   }
 
@@ -79,8 +89,10 @@ class Tasks {
       'isCompleted': isCompleted ? 1 : 0,
       'dateTime': dateTime?.toIso8601String(),
       'interval': interval,
-      'sharedWith': sharedWith,
+      'assignedTo': assignedTo,
+      'sharedWith': sharedWith != null ? jsonEncode(sharedWith) : null,
       // 'taskHours': taskHours,
+      'isAccepted': isAccepted ? 1 : 0,
     };
   }
 
@@ -97,7 +109,9 @@ class Tasks {
       'dateTime': dateTime?.toIso8601String(),
       'interval': interval,
       'taskHours': taskHours,
+      'assignedTo': assignedTo,
       'createdAt': createdAt.toIso8601String(),
+      'isAccepted': isAccepted ? 1 : 0,
     });
   }
 
@@ -111,17 +125,20 @@ class Tasks {
     bool? isCompleted,
     DateTime? dateTime,
     String? interval,
+    int? assignedTo,
     List<int>? sharedWith,
+    bool? isAccepted,
   }) {
     return Tasks(
-      id: id ?? this.id,
-      taskName: taskName ?? this.taskName,
-      isCompleted: isCompleted ?? this.isCompleted,
-      dateTime: dateTime ?? this.dateTime,
-      interval: interval ?? this.interval,
-      createdAt: createdAt,
-      sharedWith: sharedWith ?? this.sharedWith,
-    );
+        id: id ?? this.id,
+        taskName: taskName ?? this.taskName,
+        isCompleted: isCompleted ?? this.isCompleted,
+        dateTime: dateTime ?? this.dateTime,
+        interval: interval ?? this.interval,
+        createdAt: createdAt,
+        assignedTo: assignedTo ?? this.assignedTo,
+        sharedWith: sharedWith ?? this.sharedWith,
+        isAccepted: isAccepted ?? this.isAccepted);
   }
 
   @override

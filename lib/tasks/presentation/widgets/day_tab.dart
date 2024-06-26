@@ -252,12 +252,14 @@ class DayPage extends ConsumerStatefulWidget {
   final Function(Tasks) completeTask;
   final Function(Tasks) deleteTask;
   final Tasks? task;
+  // final CompletedTask completedTask;
 
   const DayPage({
     super.key,
     required this.taskList,
     required this.completeTask,
     required this.deleteTask,
+    // required this.completedTask,
     this.task,
   });
 
@@ -272,6 +274,7 @@ class DayPageState extends ConsumerState<DayPage>
   final double maxWorkingHours = 15.0;
   late List<Tasks> taskList;
   List<Tasks> dayTasks = [];
+
   String selectedInterval = 'DAY';
 
   void _setSelectedInterval(String interval) {
@@ -312,7 +315,7 @@ class DayPageState extends ConsumerState<DayPage>
   void _checkAndNotifyUser() {
     if (totalHours >= workingHours) {
       NotificationManager.showTaskNotification(
-        fileName: 'You have reached 8 hours of work today!',
+        fileName: 'You have reached 8 hours of work today',
       );
     }
   }
@@ -450,15 +453,16 @@ class DayPageState extends ConsumerState<DayPage>
 
   Widget _buildNoTasksWidget() {
     return Center(
-      child: Text(
-        AppLocalizations.of(context)!.noTaskAvailable,
-        style: const TextStyle(
-          fontSize: 20,
-          fontFamily: 'Poppins',
-          fontStyle: FontStyle.italic,
-          fontWeight: FontWeight.normal,
-          color: Colors.black,
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.calendar_today, size: 48, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            AppLocalizations.of(context)!.noTaskAvailable,
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }

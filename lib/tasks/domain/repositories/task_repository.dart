@@ -1,7 +1,9 @@
 import 'package:task_management/tasks/domain/models/attendance.dart';
 import 'package:task_management/tasks/domain/models/history.dart';
 import 'package:task_management/tasks/domain/models/task.dart';
+import 'package:task_management/tasks/domain/models/users.dart';
 
+import '../models/chat.dart';
 import '../models/comment.dart';
 import '../models/completed.dart';
 
@@ -35,4 +37,12 @@ abstract class TaskRepository {
   Future<void> editComment(int commentId, String newComment);
   Future<void> deleteComment(int commentId);
   Future<List<Comment>> getCommentsByTaskId(int taskId);
+  Future<List<Users>> getAllUsers(int loggedInUserId);
+  Future<int> getCompletedTasksCount(int userId);
+  Future<int> getUncompletedTasksCount(int userId);
+  // Future<String> getTotalTaskHoursForCurrentDate(int userId);
+  Future<int> insertChatMessage(int userId, int receiverId, String message);
+  Future<List<ChatMessage>> getChatMessagesByUserId(int userId, int receiverId);
+  Future<int> updateChatMessage(int id, String newMessage);
+  Future<int> deleteChatMessage(int id);
 }
