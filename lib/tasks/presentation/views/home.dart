@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:task_management/tasks/presentation/providers/chat_provider.dart';
 import 'package:task_management/tasks/presentation/providers/completed_provider.dart';
 import 'package:task_management/tasks/presentation/views/completed_task.dart';
 import 'package:task_management/tasks/presentation/views/login_page.dart';
@@ -427,46 +428,94 @@ class HomeState extends ConsumerState<Home> with TickerProviderStateMixin {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     itemCount: users.length,
                     itemBuilder: (context, index) {
-                      return Card(
-                        elevation: 5,
-                        margin: const EdgeInsets.symmetric(vertical: 6),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.all(15.0),
-                          title: Text(
-                            users[index].userName!,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          // subtitle: Text(
-                          //   'ID: ${users[index].userId}',
-                          //   style: const TextStyle(
-                          //     color: Colors.black54,
-                          //   ),
-                          // ),
-                          trailing:
-                              Icon(Icons.send, color: Colors.purple.shade600),
-                          onTap: () {
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    Consumer(builder: (context, ref, _) {
-                                  return ChatScreen(
-                                    userId: userId,
-                                    userName: users[index].userName!,
-                                    receiverId: users[index].userId!,
+                      return FutureBuilder<int>(
+                        future: ref
+                            .read(chatProvider.notifier)
+                            .getUnreadMessageCount(
+                                userId, users[index].userId!),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            int unreadCount = snapshot.data ?? 0;
+                            return Card(
+                              elevation: 5,
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.all(15.0),
+                                title: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        users[index].userName!,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                    if (unreadCount > 0)
+                                      Container(
+                                        padding: const EdgeInsets.all(2),
+                                        margin: const EdgeInsets.only(left: 8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black,
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Text(
+                                          '$unreadCount',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                trailing: const Icon(
+                                  Icons.send,
+                                  color: Colors.purple,
+                                ),
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  await ref
+                                      .read(chatProvider.notifier)
+                                      .getChatMessagesForUser(
+                                          userId, users[index].userId!);
+                                  await ref
+                                      .read(chatProvider.notifier)
+                                      .markMessagesAsRead(
+                                          userId, users[index].userId!);
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          Consumer(builder: (context, ref, _) {
+                                        return ChatScreen(
+                                          userId: userId,
+                                          userName: users[index].userName!,
+                                          receiverId: users[index].userId!,
+                                        );
+                                      }),
+                                    ),
                                   );
-                                }),
+                                },
                               ),
                             );
-                          },
-                        ),
+                          }
+                        },
                       );
                     },
                   ),

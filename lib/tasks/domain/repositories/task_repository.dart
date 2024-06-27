@@ -45,4 +45,6 @@ abstract class TaskRepository {
   Future<List<ChatMessage>> getChatMessagesByUserId(int userId, int receiverId);
   Future<int> updateChatMessage(int id, String newMessage);
   Future<int> deleteChatMessage(int id);
+  Future<void> markMessageAsRead(int id, int receiverId);
+  Future<int> getUnreadMessageCount(int userId, int receiverId);
 }

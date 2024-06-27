@@ -24,7 +24,7 @@ class DatabaseHelper {
       "CREATE TABLE completed_tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, taskName TEXT,userId INTEGER, seconds INTEGER, dateTime TEXT)";
 
   final String chatTable =
-      "CREATE TABLE chat_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, receiverId INTEGER, message TEXT, timestamp TEXT, FOREIGN KEY (userId) REFERENCES users(userId))";
+      "CREATE TABLE chat_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, receiverId INTEGER, message TEXT, timestamp TEXT, isRead INTEGER, FOREIGN KEY (userId) REFERENCES users(userId))";
 
   static Database? _database; // holds the reference to the database
   static DatabaseHelper?
@@ -304,7 +304,7 @@ class DatabaseHelper {
       where: 'userId = ? OR assignedTo = ?',
       whereArgs: [userId, userId],
     );
-    print('Maps : $maps');
+    // print('Maps : $maps');
     List<Tasks> tasks = [];
     for (var map in maps) {
       List<int> sharedWithList = [];
@@ -518,7 +518,7 @@ class DatabaseHelper {
       where: 'userId = ?',
       whereArgs: [userId],
     );
-    print('Completed Maps - $maps');
+    // print('Completed Maps - $maps');
     return List.generate(maps.length, (i) {
       // Check if taskId is null before casting
       int? taskId = maps[i]['taskId'] as int?;
@@ -863,12 +863,13 @@ class DatabaseHelper {
           'receiverId': receiverId,
           'message': message,
           'timestamp': now.toIso8601String(),
+          'isRead': 0,
         },
       );
-      print('DB ----- $userId -- $receiverId');
+      // print('DB ----- $userId -- $receiverId');
       return id;
     } catch (e) {
-      print('Error inserting chat message: $e');
+      // print('Error inserting chat message: $e');
       throw Exception("Failed to insert chat message.");
     }
   }
@@ -939,7 +940,6 @@ class DatabaseHelper {
       if (senderMaps.isNotEmpty) {
         messages.addAll(senderMaps.map((map) => ChatMessage.fromMap(map)));
       }
-
       // Add receiver messages, ensuring no duplicates
       for (var map in receiverMaps) {
         if (!messages.any((msg) => msg.id == map['id'])) {
@@ -949,7 +949,7 @@ class DatabaseHelper {
 
       return messages;
     } catch (e) {
-      print('Error fetching chat messages: $e');
+      // print('Error fetching chat messages: $e');
       throw CustomException('Failed to fetch chat messages: $e');
     }
   }
@@ -968,10 +968,10 @@ class DatabaseHelper {
         where: 'id = ?',
         whereArgs: [id],
       );
-      print('UPDATED MESSAGE ----- $newMessage');
+      // print('UPDATED MESSAGE ----- $newMessage');
       return count;
     } catch (e) {
-      print('Error updating chat message: $e');
+      // print('Error updating chat message: $e');
       throw Exception("Failed to update chat message.");
     }
   }
@@ -987,8 +987,40 @@ class DatabaseHelper {
       );
       return count;
     } catch (e) {
-      print('Error deleting chat message: $e');
+      // print('Error deleting chat message: $e');
       throw Exception("Failed to delete chat message.");
+    }
+  }
+
+  // Mark chat message as read
+  Future<void> markMessageAsRead(int userId, int receiverId) async {
+    final Database db = await database;
+    try {
+      await db.update(
+        'chat_messages',
+        {'isRead': 1},
+        where: 'receiverId = ? AND userId = ?',
+        whereArgs: [userId, receiverId],
+      );
+    } catch (e) {
+      // print('Error marking messages as read: $e');
+      throw Exception("Failed to mark messages as read.");
+    }
+  }
+
+  Future<int> getUnreadMessageCount(int userId, int receiverId) async {
+    try {
+      final Database db = await database;
+      final List<Map<String, dynamic>> unreadMessages = await db.query(
+        'chat_messages',
+        where: 'userId = ? AND receiverId = ? AND isRead = ?',
+        whereArgs: [receiverId, userId, 0],
+      );
+
+      print('unreadMessages ----------- $unreadMessages $receiverId $userId');
+      return unreadMessages.length;
+    } catch (e) {
+      throw CustomException('Failed to get unread message count: $e');
     }
   }
 }

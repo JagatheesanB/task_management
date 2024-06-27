@@ -1,11 +1,12 @@
 import 'dart:convert';
 
 class ChatMessage {
-   int id;
+  int id;
   final int userId;
   final int receiverId;
   final String message;
   final DateTime timestamp;
+  bool isRead;
 
   ChatMessage({
     required this.id,
@@ -13,6 +14,7 @@ class ChatMessage {
     required this.receiverId,
     required this.message,
     required this.timestamp,
+    this.isRead = false,
   });
 
   ChatMessage copyWith({
@@ -21,14 +23,15 @@ class ChatMessage {
     int? receiverId,
     String? message,
     DateTime? timestamp,
+    bool? isRead,
   }) {
     return ChatMessage(
-      id: id ?? this.id,
-      userId: userId ?? this.userId,
-      receiverId: receiverId ?? this.receiverId,
-      message: message ?? this.message,
-      timestamp: timestamp ?? this.timestamp,
-    );
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        receiverId: receiverId ?? this.receiverId,
+        message: message ?? this.message,
+        timestamp: timestamp ?? this.timestamp,
+        isRead: isRead ?? this.isRead);
   }
 
   factory ChatMessage.fromMap(Map<String, dynamic> map) {
@@ -38,6 +41,7 @@ class ChatMessage {
       receiverId: map['receiverId'] as int? ?? 0,
       message: map['message'] as String? ?? '',
       timestamp: DateTime.parse(map['timestamp']),
+      isRead: (map['isRead'] as int?) == 1,
     );
   }
 
@@ -48,6 +52,7 @@ class ChatMessage {
       'receiverId': receiverId,
       'message': message,
       'timestamp': timestamp.toIso8601String(),
+      'isRead': isRead ? 1 : 0
     };
   }
 

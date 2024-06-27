@@ -15,8 +15,24 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
           await _chatRepository.getChatMessagesByUserId(userId, receiverId);
       state = chatMessages;
     } catch (e) {
-      print('Error in getChatMessagesForUser: $e');
       throw CustomException('Failed to fetch chat messages: $e');
+    }
+  }
+
+  Future<void> markMessagesAsRead(int userId, int receiverId) async {
+    try {
+      await _chatRepository.markMessageAsRead(userId, receiverId);
+
+      state = state.map((message) {
+        if (message.receiverId == userId && !message.isRead) {
+          return message.copyWith(isRead: true);
+        } else {
+          return message;
+        }
+      }).toList();
+    } catch (e) {
+      print('Error marking messages as read: $e');
+      throw CustomException('Failed to mark messages as read: $e');
     }
   }
 
@@ -30,11 +46,8 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
         message: messageContent,
         timestamp: DateTime.now(),
       );
-      print('Before userId -- receiverId = $userId ---  $receiverId');
-
       final int messageId = await _chatRepository.insertChatMessage(
           userId, receiverId, messageContent);
-      print('After userId -- receiverId = $userId ---  $receiverId');
       final ChatMessage newMessage = message.copyWith(id: messageId);
       state = [...state, newMessage];
     } catch (e) {
@@ -75,6 +88,17 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
       }
     } else {
       throw CustomException('Message not found for delete');
+    }
+  }
+
+  Future<int> getUnreadMessageCount(int userId, int receiverId) async {
+    try {
+      final int unreadCount =
+          await _chatRepository.getUnreadMessageCount(userId, receiverId);
+      print('unreadCount ------ $unreadCount');
+      return unreadCount;
+    } catch (e) {
+      throw CustomException('Failed to get unread message count: $e');
     }
   }
 }

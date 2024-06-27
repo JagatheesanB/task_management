@@ -331,7 +331,7 @@ class CustomPopupMenu extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _CustomPopupMenuState createState() => _CustomPopupMenuState();
+  State<CustomPopupMenu> createState() => _CustomPopupMenuState();
 }
 
 class _CustomPopupMenuState extends State<CustomPopupMenu>

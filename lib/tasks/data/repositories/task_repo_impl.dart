@@ -196,8 +196,9 @@ class TaskRepositoryImplementation implements TaskRepository {
   }
 
   @override
-  Future<List<ChatMessage>> getChatMessagesByUserId(int userId,int receiverId) async {
-    return await _databaseHelper.getChatMessagesByUserId(userId,receiverId);
+  Future<List<ChatMessage>> getChatMessagesByUserId(
+      int userId, int receiverId) async {
+    return await _databaseHelper.getChatMessagesByUserId(userId, receiverId);
   }
 
   @override
@@ -208,5 +209,15 @@ class TaskRepositoryImplementation implements TaskRepository {
   @override
   Future<int> deleteChatMessage(int id) async {
     return await _databaseHelper.deleteChatMessage(id);
+  }
+
+  @override
+  Future<void> markMessageAsRead(int id, int receiverId) async {
+    await _databaseHelper.markMessageAsRead(id, receiverId);
+  }
+
+  @override
+  Future<int> getUnreadMessageCount(int userId, int receiverId) async {
+    return await _databaseHelper.getUnreadMessageCount(userId, receiverId);
   }
 }
